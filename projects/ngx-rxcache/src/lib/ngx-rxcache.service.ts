@@ -33,6 +33,10 @@ export class NgxRxcacheService {
     this.cacheItems = [ ...this.cacheItems, cacheItem ];
   }
 
+  exists(id: string): boolean {
+    return !!this.cacheItems.find(i => i.id === id);
+  }
+
   get$<T>(id: string): BehaviorSubject<T> {
     const cacheItem = this.cacheItems.find(i => i.id === id);
     if (cacheItem) {

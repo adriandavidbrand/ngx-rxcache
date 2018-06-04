@@ -15,6 +15,15 @@ describe('NgxRxcacheService', () => {
     expect(service).toBeTruthy();
   }));
 
+  it('should not exist', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+    expect(service.exists('test')).toBeFalsy();
+  }));
+
+  it('should exist', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+    service.add({ id: 'test' });
+    expect(service.exists('test')).toBeTruthy();
+  }));
+
   it('should find added item as an observable', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
     service.add({
       id: 'test',
