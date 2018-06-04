@@ -57,6 +57,10 @@ export class NgxRxcacheService {
     const cacheItem = this.cacheItems.find(i => i.id === id);
     if (cacheItem) {
       cacheItem.instance$.next(value);
+      cacheItem.hasError$.next(false);
+      cacheItem.error$.next(undefined);
+      cacheItem.loaded$.next(true);
+      cacheItem.loading$.next(false);
     }
   }
 
@@ -84,7 +88,7 @@ export class NgxRxcacheService {
           cacheItem.loading$.next(false);
         }, (error) => { this.errorHandler(cacheItem, error); }
       );
-      this.cacheItems = this.cacheItems.map(item => item.id === id ? {...item, construct, subscription } : item);
+      this.cacheItems = this.cacheItems.map(item => item.id === id ? { ...item, construct, subscription } : item);
     }
   }
 
@@ -98,7 +102,7 @@ export class NgxRxcacheService {
       cacheItem.instance$.next(undefined);
       if (cacheItem.subscription) {
         cacheItem.subscription.unsubscribe();
-        this.cacheItems = this.cacheItems.map(item => item === cacheItem ? {...item, subscription: undefined } : item);
+        this.cacheItems = this.cacheItems.map(item => item === cacheItem ? { ...item, subscription: null } : item);
       }
     }
   }
@@ -107,7 +111,7 @@ export class NgxRxcacheService {
     const cacheItem = this.cacheItems.find(item => item.id === id);
     if (cacheItem && cacheItem.subscription) {
       cacheItem.subscription.unsubscribe();
-      this.cacheItems = this.cacheItems.map(item => item === cacheItem ? {...item, subscription: undefined } : item);
+      this.cacheItems = this.cacheItems.map(item => item === cacheItem ? { ...item, subscription: null } : item);
     }
   }
 
@@ -140,7 +144,7 @@ export class NgxRxcacheService {
           cacheItem.loading$.next(false);
         }, (error) => { this.errorHandler(cacheItem, error); }
       );
-      this.cacheItems = this.cacheItems.map(item => item === cacheItem ? {...item, subscription } : item);
+      this.cacheItems = this.cacheItems.map(item => item === cacheItem ? { ...item, subscription } : item);
     }
   }
 
