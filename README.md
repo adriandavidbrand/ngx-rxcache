@@ -8,7 +8,7 @@ NgxRxcache is a light weight RxJs Behavior Subject based cache designed as a rep
 
 npm install --save ngx-rxcache
 
-Provide the service a module or a component level then inject the service into your service.
+Inject the service into your service.
 
 ```javascript
 import { Injectable } from '@angular/core';
