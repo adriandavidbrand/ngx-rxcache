@@ -1,27 +1,29 @@
-# NgxLibs
+# NgxRxcache
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 6.0.7.
+NgxRxcache is a light weight RxJs Subject Behavior based cache design as a replacement to Redux style stores. It offers much simpler to grasp ways of achieving push based data flow in your components with hardly any boiler plate code at all.
 
-## Development server
+[Testbed on StackBlitz](https://stackblitz.com/edit/angular-3yqpfe)
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+## Usage
 
-## Code scaffolding
+npm install --save ngx-rxcache
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Provide the service a module or a component level then inject the service into your service.
 
-## Build
+```javascript
+import { Injectable } from '@angular/core';
+import { NgxRxcacheService } from 'ngx-rxcache';
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+@Injectable()
+export class YourService {
+  constructor(public cache: NgxRxcacheService) {
+    cache.add({ id: 'key', construct: functionThatReturnsObservableOfYourType });
+    // or
+    cache.add({ id: 'key', initialValue : instanceOfYourType });
+  }
 
-## Running unit tests
+  data$ = () => cache.get$('key');
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+  updateData = (value) => { this.cache.update('key', value); };
+}
+```
