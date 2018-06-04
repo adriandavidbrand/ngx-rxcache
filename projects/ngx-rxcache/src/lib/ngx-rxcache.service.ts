@@ -30,7 +30,7 @@ export class NgxRxcacheService {
     if (config.load) {
       this.refreshCacheItem(cacheItem);
     }
-    this.cacheItems = [...this.cacheItems, cacheItem];
+    this.cacheItems = [ ...this.cacheItems, cacheItem ];
   }
 
   get$<T>(id: string): BehaviorSubject<T> {
@@ -125,7 +125,7 @@ export class NgxRxcacheService {
     if (cacheItem.subscription) {
       cacheItem.subscription.unsubscribe();
     }
-    this.cacheItems = this.cacheItems.filter(cacheItem => cacheItem.id !== id);
+    this.cacheItems = this.cacheItems.filter(item => item !== cacheItem);
   }
 
   private refreshCacheItem(cacheItem: RxCacheItem<any>) {
