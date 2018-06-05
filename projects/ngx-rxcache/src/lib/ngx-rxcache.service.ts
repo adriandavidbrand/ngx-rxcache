@@ -14,23 +14,25 @@ export class NgxRxcacheService {
   private cacheItems: RxCacheItem<any>[] = [];
 
   add<T>(config: RxCacheItemConfig<T>) {
-    const hasInitialValue = typeof config.initialValue !== 'undefined';
-    const cacheItem: RxCacheItem<T> = {
-      id: config.id,
-      instance$: new BehaviorSubject<T>(hasInitialValue ? config.initialValue : null),
-      loading$: new BehaviorSubject<boolean>(false),
-      loaded$: new BehaviorSubject<boolean>(hasInitialValue),
-      hasError$: new BehaviorSubject<boolean>(false),
-      error$: new BehaviorSubject<string>(undefined),
-      genericError: config.genericError ? config.genericError : 'An error has occoured',
-      construct: config.construct,
-      errorHandler: config.errorHandler,
-      subscription: null
-    };
-    if (config.load) {
-      this.refreshCacheItem(cacheItem);
+    if (!this.exists(config.id)) {
+      const hasInitialValue = typeof config.initialValue !== 'undefined';
+      const cacheItem: RxCacheItem<T> = {
+        id: config.id,
+        instance$: new BehaviorSubject<T>(hasInitialValue ? config.initialValue : null),
+        loading$: new BehaviorSubject<boolean>(false),
+        loaded$: new BehaviorSubject<boolean>(hasInitialValue),
+        hasError$: new BehaviorSubject<boolean>(false),
+        error$: new BehaviorSubject<string>(undefined),
+        genericError: config.genericError ? config.genericError : 'An error has occoured',
+        construct: config.construct,
+        errorHandler: config.errorHandler,
+        subscription: null
+      };
+      if (config.load) {
+        this.refreshCacheItem(cacheItem);
+      }
+      this.cacheItems = [ ...this.cacheItems, cacheItem ];
     }
-    this.cacheItems = [ ...this.cacheItems, cacheItem ];
   }
 
   exists(id: string): boolean {
