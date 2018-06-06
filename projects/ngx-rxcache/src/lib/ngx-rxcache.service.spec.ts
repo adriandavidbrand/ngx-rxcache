@@ -42,7 +42,7 @@ describe('NgxRxcacheService', () => {
     expect(val).toEqual(10);
   }));
 
-  it('deleted item should not', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('deleted item should not exist', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
     service.add({
       id: 'test'
     });
