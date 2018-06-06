@@ -82,27 +82,25 @@ describe('NgxRxcacheService', () => {
     expect(obs.getValue()).toEqual(val);
   }));
 
-  it('should be loading for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
+  it('should be loading for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
     service.add({
       id: 'test',
       load: true,
       construct: () => of(10).pipe(delay(5))
     });
     expect(service.loading('test')).toBeTruthy();
-    setTimeout(() => { done(); }, 5);
   }));
 
-  it('should be not be loaded for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
+  it('should be not be loaded for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
     service.add({
       id: 'test',
       load: true,
       construct: () => of(10).pipe(delay(5))
     });
     expect(service.loaded('test')).toBeFalsy();
-    setTimeout(() => { done(); }, 5);
   }));
 
-  it('should not be loading after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
+  it('should not be loading after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
     service.add({
       id: 'test',
       load: true,
@@ -112,11 +110,10 @@ describe('NgxRxcacheService', () => {
 
     setTimeout(() => {
       expect(obs.getValue()).toBeFalsy();
-      done();
     }, 6);
   }));
 
-  it('should be loaded after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
+  it('should be loaded after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
     service.add({
       id: 'test',
       load: true,
@@ -126,31 +123,28 @@ describe('NgxRxcacheService', () => {
 
     setTimeout(() => {
       expect(obs.getValue()).toBeTruthy();
-      done();
     }, 6);
   }));
 
-  it('should be saving for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
+  it('should be saving for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
     service.add({
       id: 'test',
       persist: (val) => of(val).pipe(delay(5))
     });
     service.save('test');
     expect(service.saving('test')).toBeTruthy();
-    setTimeout(() => { done(); }, 5);
   }));
 
-  it('should be not be saved for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
+  it('should be not be saved for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
     service.add({
       id: 'test',
       persist: (val) => of(val).pipe(delay(5))
     });
     service.save('test');
     expect(service.saved('test')).toBeFalsy();
-    setTimeout(() => { done(); }, 5);
   }));
 
-  it('should not be saving after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
+  it('should not be saving after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
     service.add({
       id: 'test',
       persist: (val) => of(val).pipe(delay(5))
@@ -159,11 +153,10 @@ describe('NgxRxcacheService', () => {
 
     setTimeout(() => {
       expect(service.saving('test')).toBeFalsy();
-      done();
     }, 6);
   }));
 
-  it('should be saved after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
+  it('should be saved after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
     service.add({
       id: 'test',
       persist: (val) => of(val).pipe(delay(5))
@@ -172,7 +165,6 @@ describe('NgxRxcacheService', () => {
 
     setTimeout(() => {
       expect(service.saved('test')).toBeTruthy();
-      done();
     }, 6);
   }));
 
