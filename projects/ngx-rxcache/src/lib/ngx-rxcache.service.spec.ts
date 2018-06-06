@@ -59,8 +59,7 @@ describe('NgxRxcacheService', () => {
       id: 'test',
       construct: () => of(10)
     });
-    const obs = service.get$('test');
-    expect(obs.getValue()).toEqual(10);
+    expect(service.get('test')).toEqual(10);
   }));
 
   it('should update item', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
@@ -68,8 +67,7 @@ describe('NgxRxcacheService', () => {
       id: 'test'
     });
     service.update('test', 10);
-    const obs = service.get$('test');
-    expect(obs.getValue()).toEqual(10);
+    expect(service.get('test')).toEqual(10);
   }));
 
   it('should refresh item', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
@@ -79,29 +77,29 @@ describe('NgxRxcacheService', () => {
       construct: () => of(val)
     });
     const obs = service.get$('test');
-    const firstVal = obs.getValue();
     val = 1;
     service.refresh('test');
     expect(obs.getValue()).toEqual(val);
   }));
 
-  it('should be loading for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should be loading for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
     service.add({
       id: 'test',
-      initialValue: null,
       load: true,
       construct: () => of(10).pipe(delay(5))
     });
     expect(service.loading('test')).toBeTruthy();
+    setTimeout(() => { done(); }, 5);
   }));
 
-  it('should be not be loaded for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should be not be loaded for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
     service.add({
       id: 'test',
       load: true,
       construct: () => of(10).pipe(delay(5))
     });
     expect(service.loaded('test')).toBeFalsy();
+    setTimeout(() => { done(); }, 5);
   }));
 
   it('should not be loading after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
@@ -130,6 +128,77 @@ describe('NgxRxcacheService', () => {
       expect(obs.getValue()).toBeTruthy();
       done();
     }, 6);
+  }));
+
+  it('should be saving for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
+    service.add({
+      id: 'test',
+      persist: (val) => of(val).pipe(delay(5))
+    });
+    service.save('test');
+    expect(service.saving('test')).toBeTruthy();
+    setTimeout(() => { done(); }, 5);
+  }));
+
+  it('should be not be saved for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
+    service.add({
+      id: 'test',
+      persist: (val) => of(val).pipe(delay(5))
+    });
+    service.save('test');
+    expect(service.saved('test')).toBeFalsy();
+    setTimeout(() => { done(); }, 5);
+  }));
+
+  it('should not be saving after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
+    service.add({
+      id: 'test',
+      persist: (val) => of(val).pipe(delay(5))
+    });
+    service.save('test');
+
+    setTimeout(() => {
+      expect(service.saving('test')).toBeFalsy();
+      done();
+    }, 6);
+  }));
+
+  it('should be saved after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
+    service.add({
+      id: 'test',
+      persist: (val) => of(val).pipe(delay(5))
+    });
+    service.save('test');
+
+    setTimeout(() => {
+      expect(service.saved('test')).toBeTruthy();
+      done();
+    }, 6);
+  }));
+
+  it('should run saved', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+    var test;
+    service.add({
+      id: 'test',
+      initialValue: 10,
+      persist: (val) => of(val),
+      saved: (val) => { test = val; }
+    });
+    service.save('test');
+
+    expect(test).toEqual(10);
+  }));
+
+  it('should run custom saved', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+    var test;
+    service.add({
+      id: 'test',
+      initialValue: 10,
+      persist: (val) => of(val)
+    });
+    service.save('test', (val) => { test = val; });
+
+    expect(test).toEqual(10);
   }));
 
   it('should reload item', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
