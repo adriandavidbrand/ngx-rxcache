@@ -22,6 +22,8 @@ export class NgxRxcacheService {
       ...cacheItem,
       genericError: config.genericError || cacheItem.genericError,
       construct: config.construct || cacheItem.construct,
+      persist: config.persist || cacheItem.persist,
+      saved: config.saved || cacheItem.saved,
       errorHandler: config.errorHandler || cacheItem.errorHandler,
       subscription: config.construct ? null : cacheItem.subscription
     };
@@ -42,10 +44,11 @@ export class NgxRxcacheService {
         instance$: new BehaviorSubject<T>(undefined),
         loading$: new BehaviorSubject<boolean>(false),
         loaded$: new BehaviorSubject<boolean>(false),
+        saving$: new BehaviorSubject<boolean>(false),
+        saved$: new BehaviorSubject<boolean>(false),
         hasError$: new BehaviorSubject<boolean>(false),
         error$: new BehaviorSubject<string>(undefined),
         genericError: this.genericError,
-        construct: undefined,
         errorHandler: undefined,
         subscription: null
       };
@@ -67,11 +70,7 @@ export class NgxRxcacheService {
   }
 
   get<T>(id: string): T {
-    const cacheItem = this.find(id);
-    if (!cacheItem.loaded$.getValue() && !cacheItem.loading$.getValue()) {
-      this.refreshCacheItem(cacheItem);
-    }
-    return cacheItem.instance$.getValue() as T;
+    return this.get$(id).getValue() as T;
   }
 
   update<T>(id: string, value: T) {
@@ -83,8 +82,26 @@ export class NgxRxcacheService {
     cacheItem.loading$.next(false);
   }
 
-  refresh (id: string) {
+  refresh(id: string) {
     this.refreshCacheItem(this.find(id));
+  }
+
+  save<T>(id: string, saved?: (val: any) => void) {
+    const cacheItem = this.find(id);
+    if (cacheItem.persist) {
+      cacheItem.saved$.next(false);
+      cacheItem.saving$.next(true);
+      cacheItem.persist(cacheItem.instance$.getValue() as T).subscribe(val => {
+        if (saved) {
+          saved(val);
+        }
+        if (cacheItem.saved) {
+          cacheItem.saved(val);
+        }
+        cacheItem.saved$.next(true);
+        cacheItem.saving$.next(false);
+      }, (error) => { this.errorHandler(cacheItem, error); });
+    }
   }
 
   reload<T>(id: string, construct: () => Observable<T>) {
@@ -106,7 +123,7 @@ export class NgxRxcacheService {
     this.cacheItems = this.cacheItems.map(item => item.id === id ? { ...item, construct, subscription } : item);
   }
 
-  reset (id: string) {
+  reset(id: string) {
     const cacheItem = this.cacheItems.find(item => item.id === id);
     if ( cacheItem ) {
       cacheItem.loaded$.next(false);
@@ -114,22 +131,22 @@ export class NgxRxcacheService {
       cacheItem.hasError$.next(false);
       cacheItem.error$.next(undefined);
       cacheItem.instance$.next(undefined);
-      if (cacheItem.subscription) {
-        cacheItem.subscription.unsubscribe();
-        this.cacheItems = this.cacheItems.map(item => item === cacheItem ? { ...item, subscription: null } : item);
-      }
+      this.unsubscribeItem(cacheItem);
     }
   }
 
-  unsubscribe (id: string) {
-    const cacheItem = this.cacheItems.find(item => item.id === id);
+  unsubscribe(id: string) {
+    this.unsubscribeItem(this.cacheItems.find(item => item.id === id));
+  }
+
+  private unsubscribeItem(cacheItem: RxCacheItem<any>) {
     if (cacheItem && cacheItem.subscription) {
       cacheItem.subscription.unsubscribe();
       this.cacheItems = this.cacheItems.map(item => item === cacheItem ? { ...item, subscription: null } : item);
     }
   }
 
-  delete (id: string) {
+  delete(id: string) {
     const cacheItem = this.cacheItems.find(item => item.id === id);
     if (cacheItem) {
       cacheItem.instance$.complete();
@@ -144,7 +161,7 @@ export class NgxRxcacheService {
     }
   }
 
-  private refreshCacheItem (cacheItem: RxCacheItem<any>) {
+  private refreshCacheItem(cacheItem: RxCacheItem<any>) {
     if (cacheItem.construct) {
       cacheItem.loaded$.next(false);
       cacheItem.loading$.next(true);
@@ -164,38 +181,54 @@ export class NgxRxcacheService {
     }
   }
 
-  private errorHandler (cacheItem: RxCacheItem<any>, error: any) {
+  private errorHandler(cacheItem: RxCacheItem<any>, error: any) {
     cacheItem.error$.next(cacheItem.errorHandler ? this.generateErrorMessage(cacheItem, error) : cacheItem.genericError);
     cacheItem.loaded$.next(false);
     cacheItem.loading$.next(false);
     cacheItem.hasError$.next(true);
   }
 
-  private generateErrorMessage (cacheItem, error: any): string {
+  private generateErrorMessage(cacheItem, error: any): string {
     return cacheItem.errorHandler(cacheItem.id, error) || cacheItem.genericError;
   }
 
-  loading (id: string): boolean {
+  loading(id: string): boolean {
     return this.find(id).loading$.getValue();
   }
 
-  loading$ (id: string): BehaviorSubject<boolean> {
+  loading$(id: string): BehaviorSubject<boolean> {
     return this.find(id).loading$;
   }
 
-  loaded (id: string): boolean {
+  loaded(id: string): boolean {
     return this.find(id).loaded$.getValue();
   }
 
-  loaded$ (id: string): BehaviorSubject<boolean> {
+  loaded$(id: string): BehaviorSubject<boolean> {
     return this.find(id).loaded$;
   }
 
-  error (id: string): string {
+  saving(id: string): boolean {
+    return this.find(id).saving$.getValue();
+  }
+
+  saving$(id: string): BehaviorSubject<boolean> {
+    return this.find(id).saving$;
+  }
+
+  saved(id: string): boolean {
+    return this.find(id).saved$.getValue();
+  }
+
+  saved$(id: string): BehaviorSubject<boolean> {
+    return this.find(id).saved$;
+  }
+
+  error(id: string): string {
     return this.find(id).error$.getValue();
   }
 
-  error$ (id: string): BehaviorSubject<string> {
+  error$(id: string): BehaviorSubject<string> {
     return this.find(id).error$;
   }
 }
