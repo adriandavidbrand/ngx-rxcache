@@ -1,6 +1,6 @@
 import { TestBed, inject } from '@angular/core/testing';
 import { Observable, of, throwError } from 'rxjs';
-import { delay, map } from 'rxjs/operators';
+import { delay } from 'rxjs/operators';
 
 import { NgxRxcacheService } from './ngx-rxcache.service';
 
@@ -99,7 +99,7 @@ describe('NgxRxcacheService', () => {
     service.add({
       id: 'test',
       load: true,
-      construct: () => { console.log('poo'); return of(10).pipe(map(val => { console.log('poo poo'); return val; }), delay(5)); }
+      construct: () => of(10).pipe(delay(5))
     });
     expect(service.loaded('test')).toBeFalsy();
   }));
