@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
 
-import { RxCacheItem } from '../models/ngx-rxcache/rxcache-item';
-import { RxCacheItemConfig } from '../models/ngx-rxcache/rxcache-item-config';
+import { RxCacheItem } from './models/rxcache-item';
+import { RxCacheItemConfig } from './models/rxcache-item-config';
 
 @Injectable()
 export class NgxRxcacheService {
@@ -31,9 +31,9 @@ export class NgxRxcacheService {
       cacheItem.subscription.unsubscribe();
     }
     if (config.load) {
-      this.refreshCacheItem(cacheItem);
+      this.refreshCacheItem(newCacheItem);
     }
-    this.cacheItems = this.cacheItems.map(item => item === cacheItem ? newCacheItem : item);
+    this.cacheItems = this.cacheItems.map(item => item.id === cacheItem.id ? newCacheItem : item);
   }
 
   find<T>(id: string): RxCacheItem<T> {
@@ -157,7 +157,7 @@ export class NgxRxcacheService {
       if (cacheItem.subscription) {
         cacheItem.subscription.unsubscribe();
       }
-      this.cacheItems = this.cacheItems.filter(item => item !== cacheItem);
+      this.cacheItems = this.cacheItems.filter(item => item.id !== cacheItem.id);
     }
   }
 

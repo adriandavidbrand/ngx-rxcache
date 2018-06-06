@@ -1,6 +1,6 @@
 import { TestBed, inject } from '@angular/core/testing';
 import { Observable, of, throwError } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, map } from 'rxjs/operators';
 
 import { NgxRxcacheService } from './ngx-rxcache.service';
 
@@ -38,21 +38,20 @@ describe('NgxRxcacheService', () => {
       id: 'test',
       initialValue: 10
     });
-    const obs = service.get('test');
-    expect(obs).toEqual(10);
+    const val = service.get('test');
+    expect(val).toEqual(10);
   }));
 
-  it('should not find deleted item', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('deleted item should not', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
     service.add({
       id: 'test'
     });
     service.delete('test');
-    const obs = service.get$('test');
-    expect(obs).toBeUndefined();
+    expect(service.exists('test')).toBeFalsy();
   }));
 
-  it('should not find non existing item', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
-    expect(service.get$(`Does't Exist`)).toBeUndefined();
+  it('non existing item', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+    expect(service.exists(`Does't Exist`)).toBeFalsy();
   }));
 
   it('should generate item from constructor function', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
@@ -89,21 +88,20 @@ describe('NgxRxcacheService', () => {
   it('should be loading for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
     service.add({
       id: 'test',
+      initialValue: null,
       load: true,
       construct: () => of(10).pipe(delay(5))
     });
-    const obs = service.loading$('test');
-    expect(obs.getValue()).toBeTruthy();
+    expect(service.loading('test')).toBeTruthy();
   }));
 
   it('should be not be loaded for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
     service.add({
       id: 'test',
       load: true,
-      construct: () => of(10).pipe(delay(5))
+      construct: () => { console.log('poo'); return of(10).pipe(map(val => { console.log('poo poo'); return val; }), delay(5)); }
     });
-    const obs = service.loaded$('test');
-    expect(obs.getValue()).toBeFalsy();
+    expect(service.loaded('test')).toBeFalsy();
   }));
 
   it('should not be loading after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService, done: DoneFn) => {
