@@ -1,5 +1,5 @@
 import { TestBed, inject } from '@angular/core/testing';
-import { Observable, of, throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
 import { NgxRxcacheService } from './ngx-rxcache.service';
@@ -206,7 +206,7 @@ describe('NgxRxcacheService', () => {
     const cacheItem = service.config({
       id: id,
       load: true,
-      errorHandler: (error: any) => `test ${error}`,
+      errorHandler: (error: any) => `${id} ${error}`,
       construct: () => throwError('Fail')
     });
     expect(cacheItem.error$.getValue()).toEqual(`${cacheItem.id} Fail`);
