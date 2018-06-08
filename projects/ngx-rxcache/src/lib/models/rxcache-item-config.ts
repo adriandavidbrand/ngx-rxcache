@@ -8,5 +8,5 @@ export interface RxCacheItemConfig<T> {
   load?: boolean;
   initialValue?: T;
   genericError?: string;
-  errorHandler?: ( id: string, error?: any ) => string;
+  errorHandler?: (id: string, error?: any) => string;
 }
