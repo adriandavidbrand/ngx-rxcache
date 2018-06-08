@@ -1,4 +1,5 @@
-import { Observable, BehaviorSubject, Subscription } from "rxjs";
+import { Observable, BehaviorSubject, Subscription, Subject } from "rxjs";
+import { takeUntil } from 'rxjs/operators';
 
 import { RxCacheItemConfig } from "./rxcache-item-config";
 import { globalConfig } from './global-config';
@@ -9,6 +10,15 @@ export class RxCacheItem<T> {
     this.instance$ = new BehaviorSubject<T>(config.initialValue);
     this.configure(config);
   }
+
+  id: string;
+
+  private genericError: string;
+  private construct?: () => Observable<T>;
+  private persist?: (val: T) => Observable<any>;
+  private saved?: (val: any) => void;
+  private errorHandler?: (error?: any) => string;
+  private subscription?: Subscription;
 
   configure(config: RxCacheItemConfig<T>) {
     const hasInitialValue = typeof config.initialValue !== 'undefined';
@@ -26,16 +36,13 @@ export class RxCacheItem<T> {
     this.saved = config.saved || this.saved;
     this.errorHandler = config.errorHandler || this.errorHandler;
 
-    if (config.construct && this.subscription) {
-      this.subscription.unsubscribe();
-      this.subscription = null;
+    if (config.construct) {
+      this.unsubscribe();
     }
     if (config.load) {
       this.refresh();
     }
   }
-
-  id: string;
 
   private instance$: BehaviorSubject<T>;
   get value$(): BehaviorSubject<T> {
@@ -93,13 +100,6 @@ export class RxCacheItem<T> {
     return this._error$;
   }
 
-  private genericError: string;
-  private construct?: () => Observable<T>;
-  private persist?: (val: T) => Observable<any>;
-  private saved?: (val: any) => void;
-  private errorHandler: (error?: any) => string;
-  private subscription: Subscription;
-
   private next<T>(bs: BehaviorSubject<T>, value: T) {
     if (bs) {
       bs.next(value);
@@ -118,7 +118,10 @@ export class RxCacheItem<T> {
     if (this.persist) {
       this.saving$.next(true);
       this.saved$.next(false);
-      this.persist(this.instance$.getValue()).subscribe(val => {
+      this.hasError$.next(false);
+      this.error$.next(undefined);
+      const finalise = new Subject<boolean>();
+      this.persist(this.instance$.getValue()).pipe(takeUntil(finalise)).subscribe(val => {
         if (saved) {
           saved(val);
         }
@@ -127,43 +130,40 @@ export class RxCacheItem<T> {
         }
         this._saved$.next(true);
         this._saving$.next(false);
-      }, (error) => { this.runErrorHandler(error); });
+        finalise.next(true);
+      }, (error) => { this.runErrorHandler(error); finalise.next(true); });
     }
   }
 
   reload(construct: () => Observable<T>) {
-    this.next(this.loaded$, false);
-    this.next(this.loading$, true);
-    this.next(this.hasError$, false);
-    this.next(this.error$, undefined);
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
+    this.loaded$.next(false);
+    this.loading$.next(true);
+    this.hasError$.next(false);
+    this.error$.next(undefined);
+    this.unsubscribe();
+    this.construct = construct;
     this.subscription = construct().subscribe(
       item => {
         this.instance$.next(item);
-        this.next(this.loaded$, true);
-        this.next(this.loading$, false);
+        this._loaded$.next(true);
+        this._loading$.next(false);
       }, (error) => { this.runErrorHandler(error); }
     );
   }
 
-  reset() {
-    this.next(this.loaded$, false);
-    this.next(this.loading$, false);
-    this.next(this.hasError$, false);
-    this.next(this.error$, undefined);
-    this.instance$.next(undefined);
-    this.unsubscribeItem();
+  reset(item?: T) {
+    this.next(this._loaded$, false);
+    this.next(this._loading$, false);
+    this.next(this._hasError$, false);
+    this.next(this._error$, undefined);
+    this.instance$.next(item);
+    this.unsubscribe();
   }
 
   unsubscribe() {
-    this.unsubscribeItem();
-  }
-
-  private unsubscribeItem() {
     if (this.subscription) {
       this.subscription.unsubscribe();
+      this.subscription = null;
     }
   }
 
@@ -173,9 +173,7 @@ export class RxCacheItem<T> {
     this.complete(this._loaded$);
     this.complete(this._error$);
     this.complete(this._hasError$);
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
+    this.unsubscribe();
   }
 
   private complete(bs: BehaviorSubject<any>) {
@@ -187,27 +185,32 @@ export class RxCacheItem<T> {
   refresh() {
     if (this.construct) {
       this.loading$.next(true);
-      this.next(this.loaded$, false);
-      this.next(this.hasError$, false);
-      this.next(this.error$, undefined);
-      if (this.subscription) {
-        this.subscription.unsubscribe();
-      }
+      this.loaded$.next(false);
+      this.hasError$.next(false);
+      this.error$.next(undefined);
+      this.unsubscribe();
       this.subscription = this.construct().subscribe(
         item => {
           this.instance$.next(item);
-          this.next(this.loaded$, true);
-          this.next(this.loading$, false);
+          this._loaded$.next(true);
+          this._loading$.next(false);
         }, (error) => { this.runErrorHandler(error); }
       );
     }
   }
 
   private runErrorHandler(error: any) {
-    this.error$.next((this.errorHandler ? this.generateErrorMessage(error) : this.genericError) || globalConfig.genericError);
-    this.loaded$.next(false);
-    this.loading$.next(false);
+    const globalConfigError = globalConfig.errorHandler ? globalConfig.errorHandler(error) : globalConfig.genericError;
+    this.error$.next((this.errorHandler ? this.generateErrorMessage(error) : this.genericError) || globalConfigError || globalConfig.genericError);
     this.hasError$.next(true);
+    if (this.construct) {
+      this.loaded$.next(false);
+      this.loading$.next(false);
+    }
+    if (this.persist) {
+      this.saved$.next(false);
+      this.saving$.next(false);
+    }
   }
 
   private generateErrorMessage(error: any): string {
