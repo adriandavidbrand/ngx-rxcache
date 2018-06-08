@@ -7,7 +7,8 @@ import { globalConfig } from './global-config';
 export class RxCacheItem<T> {
   constructor (config: RxCacheItemConfig<T>) {
     this.id = config.id;
-    this.instance$ = new BehaviorSubject<T>(config.initialValue);
+    const localStorageItem = localStorage.getItem(config.id);
+    this.instance$ = new BehaviorSubject<T>(localStorageItem ? JSON.parse(localStorageItem) : config.initialValue);
     this.configure(config);
   }
 
@@ -17,6 +18,7 @@ export class RxCacheItem<T> {
   private construct?: () => Observable<T>;
   private persist?: (val: T) => Observable<any>;
   private saved?: (val: any) => void;
+  private localStorage?: boolean;
   private errorHandler?: (error?: any) => string;
   private subscription?: Subscription;
 
@@ -106,15 +108,18 @@ export class RxCacheItem<T> {
     }
   }
 
-  update(value) {
-    this.instance$.next(value);
+  update(item: T) {
+    if (this.localStorage) {
+      localStorage.setItem(this.id, JSON.stringify(item));
+    }
+    this.instance$.next(item);
     this.next(this._hasError$, false);
     this.next(this._error$, undefined);
     this.next(this._loaded$, true);
     this.next(this._loading$, false);
   }
 
-  save<T>(saved?: (val: any) => void) {
+  save(saved?: (val: any) => void) {
     if (this.persist) {
       this.saving$.next(true);
       this.saved$.next(false);
@@ -144,6 +149,9 @@ export class RxCacheItem<T> {
     this.construct = construct;
     this.subscription = construct().subscribe(
       item => {
+        if (this.localStorage) {
+          localStorage.setItem(this.id, JSON.stringify(item));
+        }
         this.instance$.next(item);
         this._loaded$.next(true);
         this._loading$.next(false);
@@ -156,6 +164,9 @@ export class RxCacheItem<T> {
     this.next(this._loading$, false);
     this.next(this._hasError$, false);
     this.next(this._error$, undefined);
+    if (this.localStorage) {
+      localStorage.setItem(this.id, JSON.stringify(item));
+    }
     this.instance$.next(item);
     this.unsubscribe();
   }
@@ -191,6 +202,9 @@ export class RxCacheItem<T> {
       this.unsubscribe();
       this.subscription = this.construct().subscribe(
         item => {
+          if (this.localStorage) {
+            localStorage.setItem(this.id, JSON.stringify(item));
+          }
           this.instance$.next(item);
           this._loaded$.next(true);
           this._loading$.next(false);

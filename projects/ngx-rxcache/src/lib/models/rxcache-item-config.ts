@@ -6,6 +6,7 @@ export interface RxCacheItemConfig<T> {
   persist?: (val: T) => Observable<any>;
   saved?: (val: any) => void;
   load?: boolean;
+  localStorage?: boolean;
   initialValue?: T;
   genericError?: string;
   errorHandler?: (id: string, error?: any) => string;

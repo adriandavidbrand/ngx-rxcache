@@ -34,6 +34,9 @@ export class NgxRxcacheService {
 
   delete<T>(id: string) {
     let cacheItem = this.cacheItems.find(i => i.id === id);
+    if (localStorage.getItem(id)) {
+      localStorage.removeItem(id);
+    }
     if (cacheItem) {
       cacheItem.finish();
       this.cacheItems = this.cacheItems.filter(item => item.id !== id);
