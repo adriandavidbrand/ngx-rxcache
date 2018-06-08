@@ -13,14 +13,14 @@ export class RxCacheItem<T> {
   }
 
   id: string;
-
+  private subscription?: Subscription;
+  private localStorage?: boolean;
   private genericError: string;
+
   private construct?: () => Observable<T>;
   private persist?: (val: T) => Observable<any>;
   private saved?: (val: any) => void;
-  private localStorage?: boolean;
   private errorHandler?: (error?: any) => string;
-  private subscription?: Subscription;
 
   configure(config: RxCacheItemConfig<T>) {
     const hasInitialValue = typeof config.initialValue !== 'undefined';
@@ -32,7 +32,9 @@ export class RxCacheItem<T> {
       }
     }
 
+    this.localStorage = config.localStorage || this.localStorage;
     this.genericError = config.genericError || this.genericError;
+
     this.construct = config.construct || this.construct;
     this.persist = config.persist || this.persist;
     this.saved = config.saved || this.saved;
