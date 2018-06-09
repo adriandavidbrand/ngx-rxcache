@@ -8,6 +8,9 @@ export class RxCacheItem<T> {
   constructor (config: RxCacheItemConfig<T>) {
     this.id = config.id;
     const localStorageItem = localStorage.getItem(config.id);
+    if (localStorageItem) {
+      this.localStorage = true;
+    }
     this.instance$ = new BehaviorSubject<T>((localStorageItem && localStorageItem !== 'undefined') ? JSON.parse(localStorageItem) : config.initialValue);
     this.configure(config);
   }
@@ -110,11 +113,7 @@ export class RxCacheItem<T> {
 
   private nextValue(item: T) {
     if (this.localStorage) {
-      if (typeof item === 'undefined') {
-        localStorage.removeItem(this.id);
-      } else {
-        localStorage.setItem(this.id, JSON.stringify(item));
-      }
+      localStorage.setItem(this.id, JSON.stringify(item));
     }
     this.instance$.next(item);
   }
