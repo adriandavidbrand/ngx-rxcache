@@ -6,4 +6,4 @@ import { NgModule } from '@angular/core';
   declarations: [],
   exports: []
 })
-export class NgxRxcacheModule { }
+export class RxCacheModule { }

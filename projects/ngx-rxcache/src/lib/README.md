@@ -12,18 +12,20 @@ Inject the service into your service.
 
 ```javascript
 import { Injectable } from '@angular/core';
-import { NgxRxcacheService } from 'ngx-rxcache';
+import { RxCacheService, RxCacheItem } from 'ngx-rxcache';
 
 @Injectable()
 export class YourService {
-  constructor(public cache: NgxRxcacheService) {
-    cache.add({ id: 'key', construct: functionThatReturnsObservableOfYourType });
+  constructor(public cache: RxCacheService) {
+    const item = cache.config({ id: 'key', construct: functionThatReturnsObservableOfYourType });
     // or
-    cache.add({ id: 'key', initialValue : instanceOfYourType });
+    const item = cache.config({ id: 'key', initialValue : instanceOfYourType });
   }
 
-  data$ = () => cache.get$('key');
+  item: RxCacheItem<any>;
 
-  updateData = (value) => { this.cache.update('key', value); };
+  data$ = this.item.value$;
+
+  update = (value) => { this.item.update(value); };
 }
 ```

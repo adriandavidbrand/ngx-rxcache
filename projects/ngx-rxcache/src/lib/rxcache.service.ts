@@ -2,10 +2,10 @@ import { Injectable } from '@angular/core';
 
 import { RxCacheItem } from './models/rxcache-item';
 import { RxCacheItemConfig } from './models/rxcache-item-config';
-import { globalConfig } from './models/global-config';
+import { globalConfig } from './models/rxcache-global-config';
 
 @Injectable()
-export class NgxRxcacheService {
+export class RxCacheService {
   private cacheItems: RxCacheItem<any>[] = [];
 
   config<T>(config: RxCacheItemConfig<T>) {

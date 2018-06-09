@@ -1,14 +1,14 @@
-import { Observable, BehaviorSubject, Subscription, Subject } from "rxjs";
+import { Observable, BehaviorSubject, Subscription, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import { RxCacheItemConfig } from "./rxcache-item-config";
-import { globalConfig } from './global-config';
+import { RxCacheItemConfig } from './rxcache-item-config';
+import { globalConfig } from './rxcache-global-config';
 
 export class RxCacheItem<T> {
   constructor (config: RxCacheItemConfig<T>) {
     this.id = config.id;
     const localStorageItem = localStorage.getItem(config.id);
-    this.instance$ = new BehaviorSubject<T>(localStorageItem ? JSON.parse(localStorageItem) : config.initialValue);
+    this.instance$ = new BehaviorSubject<T>((localStorageItem && localStorageItem !== 'undefined') ? JSON.parse(localStorageItem) : config.initialValue);
     this.configure(config);
   }
 
@@ -26,10 +26,8 @@ export class RxCacheItem<T> {
     const hasInitialValue = typeof config.initialValue !== 'undefined';
     const hasValue = typeof this.instance$.getValue() !== 'undefined';
     if (hasInitialValue && !hasValue) {
-      this.instance$.next(config.initialValue);
-      if (this._loaded$) {
-        this._loaded$.next(true);
-      }
+      this.nextValue(config.initialValue);
+      this.next(this._loaded$, true);
     }
 
     this.localStorage = config.localStorage || this.localStorage;
@@ -110,11 +108,19 @@ export class RxCacheItem<T> {
     }
   }
 
-  update(item: T) {
+  private nextValue(item: T) {
     if (this.localStorage) {
-      localStorage.setItem(this.id, JSON.stringify(item));
+      if (typeof item === 'undefined') {
+        localStorage.removeItem(this.id);
+      } else {
+        localStorage.setItem(this.id, JSON.stringify(item));
+      }
     }
     this.instance$.next(item);
+  }
+
+  update(item: T) {
+    this.nextValue(item);
     this.next(this._hasError$, false);
     this.next(this._error$, undefined);
     this.next(this._loaded$, true);
@@ -151,10 +157,7 @@ export class RxCacheItem<T> {
     this.construct = construct;
     this.subscription = construct().subscribe(
       item => {
-        if (this.localStorage) {
-          localStorage.setItem(this.id, JSON.stringify(item));
-        }
-        this.instance$.next(item);
+        this.nextValue(item);
         this._loaded$.next(true);
         this._loading$.next(false);
       }, (error) => { this.runErrorHandler(error); }
@@ -166,10 +169,7 @@ export class RxCacheItem<T> {
     this.next(this._loading$, false);
     this.next(this._hasError$, false);
     this.next(this._error$, undefined);
-    if (this.localStorage) {
-      localStorage.setItem(this.id, JSON.stringify(item));
-    }
-    this.instance$.next(item);
+    this.nextValue(item);
     this.unsubscribe();
   }
 
@@ -204,10 +204,7 @@ export class RxCacheItem<T> {
       this.unsubscribe();
       this.subscription = this.construct().subscribe(
         item => {
-          if (this.localStorage) {
-            localStorage.setItem(this.id, JSON.stringify(item));
-          }
-          this.instance$.next(item);
+          this.nextValue(item);
           this._loaded$.next(true);
           this._loading$.next(false);
         }, (error) => { this.runErrorHandler(error); }

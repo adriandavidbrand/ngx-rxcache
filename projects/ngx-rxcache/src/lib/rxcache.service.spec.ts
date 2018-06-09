@@ -2,29 +2,29 @@ import { TestBed, inject } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
-import { NgxRxcacheService } from './ngx-rxcache.service';
+import { RxCacheService } from './rxcache.service';
 
-describe('NgxRxcacheService', () => {
+describe('RxCacheService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [NgxRxcacheService]
+      providers: [RxCacheService]
     });
   });
 
-  it('should be created', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should be created', inject([RxCacheService], (service: RxCacheService) => {
     expect(service).toBeTruthy();
   }));
 
-  it('should not exist', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should not exist', inject([RxCacheService], (service: RxCacheService) => {
     expect(service.exists('test')).toBeFalsy();
   }));
 
-  it('should exist', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should exist', inject([RxCacheService], (service: RxCacheService) => {
     service.config({ id: 'test' });
     expect(service.exists('test')).toBeTruthy();
   }));
 
-  it('should equal initial value', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should equal initial value', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
       initialValue: 10
@@ -32,7 +32,7 @@ describe('NgxRxcacheService', () => {
     expect(cacheItem.value$.getValue()).toEqual(10);
   }));
 
-  it('deleted item should not exist', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('deleted item should not exist', inject([RxCacheService], (service: RxCacheService) => {
     service.config({
       id: 'test'
     });
@@ -40,11 +40,11 @@ describe('NgxRxcacheService', () => {
     expect(service.exists('test')).toBeFalsy();
   }));
 
-  it('non existing item', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('non existing item', inject([RxCacheService], (service: RxCacheService) => {
     expect(service.exists(`Does't Exist`)).toBeFalsy();
   }));
 
-  it('should generate item from constructor function', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should generate item from constructor function', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
       construct: () => of(10)
@@ -52,7 +52,7 @@ describe('NgxRxcacheService', () => {
     expect(cacheItem.value$.getValue()).toEqual(10);
   }));
 
-  it('should update item', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should update item', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test'
     });
@@ -60,7 +60,7 @@ describe('NgxRxcacheService', () => {
     expect(cacheItem.value$.getValue()).toEqual(10);
   }));
 
-  it('should refresh item', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should refresh item', inject([RxCacheService], (service: RxCacheService) => {
     let val = 0;
     const cacheItem = service.config({
       id: 'test',
@@ -71,7 +71,7 @@ describe('NgxRxcacheService', () => {
     expect(cacheItem.value$.getValue()).toEqual(val);
   }));
 
-  it('should be loading for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should be loading for 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
       load: true,
@@ -80,7 +80,7 @@ describe('NgxRxcacheService', () => {
     expect(cacheItem.loading$.getValue()).toBeTruthy();
   }));
 
-  it('should be not be loaded for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should be not be loaded for 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
       load: true,
@@ -89,7 +89,7 @@ describe('NgxRxcacheService', () => {
     expect(cacheItem.loaded$.getValue()).toBeFalsy();
   }));
 
-  it('should not be loading after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should not be loading after 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
       load: true,
@@ -100,7 +100,7 @@ describe('NgxRxcacheService', () => {
     }, 6);
   }));
 
-  it('should be loaded after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should be loaded after 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
       load: true,
@@ -111,7 +111,7 @@ describe('NgxRxcacheService', () => {
     }, 6);
   }));
 
-  it('should be saving for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should be saving for 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
       persist: (val) => of(val).pipe(delay(5))
@@ -120,7 +120,7 @@ describe('NgxRxcacheService', () => {
     expect(cacheItem.saving$.getValue()).toBeTruthy();
   }));
 
-  it('should be not be saved for 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should be not be saved for 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
       persist: (val) => of(val).pipe(delay(5))
@@ -129,7 +129,7 @@ describe('NgxRxcacheService', () => {
     expect(cacheItem.saved$.getValue()).toBeFalsy();
   }));
 
-  it('should not be saving after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should not be saving after 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
       persist: (val) => of(val).pipe(delay(5))
@@ -140,7 +140,7 @@ describe('NgxRxcacheService', () => {
     }, 6);
   }));
 
-  it('should be saved after 5ms', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should be saved after 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
       persist: (val) => of(val).pipe(delay(5))
@@ -151,7 +151,7 @@ describe('NgxRxcacheService', () => {
     }, 6);
   }));
 
-  it('should run saved', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should run saved', inject([RxCacheService], (service: RxCacheService) => {
     let test;
     const cacheItem = service.config({
       id: 'test',
@@ -163,7 +163,7 @@ describe('NgxRxcacheService', () => {
     expect(test).toEqual(10);
   }));
 
-  it('should run custom saved', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should run custom saved', inject([RxCacheService], (service: RxCacheService) => {
     let test;
     const cacheItem = service.config({
       id: 'test',
@@ -174,7 +174,7 @@ describe('NgxRxcacheService', () => {
     expect(test).toEqual(10);
   }));
 
-  it('should reload item', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should reload item', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test'
     });
@@ -182,7 +182,7 @@ describe('NgxRxcacheService', () => {
     expect(cacheItem.value$.getValue()).toEqual(10);
   }));
 
-  it('should error with generic error message', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should error with generic error message', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
       load: true,
@@ -191,7 +191,7 @@ describe('NgxRxcacheService', () => {
     expect(cacheItem.error$.getValue()).toEqual('An error has occoured');
   }));
 
-  it('should error with generic custom message', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should error with generic custom message', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
       load: true,
@@ -201,7 +201,7 @@ describe('NgxRxcacheService', () => {
     expect(cacheItem.error$.getValue()).toEqual('I failed');
   }));
 
-  it('should error with error handler', inject([NgxRxcacheService], (service: NgxRxcacheService) => {
+  it('should error with error handler', inject([RxCacheService], (service: RxCacheService) => {
     const id = 'test';
     const cacheItem = service.config({
       id: id,
