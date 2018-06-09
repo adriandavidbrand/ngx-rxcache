@@ -20,7 +20,7 @@ export class RxCacheItem<T> {
   private construct?: () => Observable<T>;
   private persist?: (val: T) => Observable<any>;
   private saved?: (val: any) => void;
-  private errorHandler?: (error?: any) => string;
+  private errorHandler?: (id: string, error?: any) => string;
 
   configure(config: RxCacheItemConfig<T>) {
     const hasInitialValue = typeof config.initialValue !== 'undefined';
@@ -213,7 +213,7 @@ export class RxCacheItem<T> {
   }
 
   private runErrorHandler(error: any) {
-    const globalConfigError = globalConfig.errorHandler ? globalConfig.errorHandler(error) : globalConfig.genericError;
+    const globalConfigError = globalConfig.errorHandler ? globalConfig.errorHandler(this.id, error) : globalConfig.genericError;
     this.error$.next((this.errorHandler ? this.generateErrorMessage(error) : this.genericError) || globalConfigError || globalConfig.genericError);
     this.hasError$.next(true);
     if (this.construct) {
@@ -227,6 +227,6 @@ export class RxCacheItem<T> {
   }
 
   private generateErrorMessage(error: any): string {
-    return this.errorHandler(error) || this.genericError || globalConfig.genericError;
+    return this.errorHandler(this.id, error) || this.genericError || globalConfig.genericError;
   }
 }

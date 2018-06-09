@@ -206,7 +206,7 @@ describe('RxCacheService', () => {
     const cacheItem = service.config({
       id: id,
       load: true,
-      errorHandler: (error: any) => `${id} ${error}`,
+      errorHandler: (id: string, error: any) => `${id} ${error}`,
       construct: () => throwError('Fail')
     });
     expect(cacheItem.error$.getValue()).toEqual(`${cacheItem.id} Fail`);
