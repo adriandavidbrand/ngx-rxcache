@@ -17,9 +17,9 @@ import { RxCacheService, RxCacheItem } from 'ngx-rxcache';
 @Injectable()
 export class YourService {
   constructor(public cache: RxCacheService) {
-    const item = cache.config({ id: 'key', construct: functionThatReturnsObservableOfYourType });
+    this.item = cache.config({ id: 'key', construct: functionThatReturnsObservableOfYourType });
     // or
-    const item = cache.config({ id: 'key', initialValue : instanceOfYourType });
+    this.item = cache.config({ id: 'key', initialValue : instanceOfYourType });
   }
 
   item: RxCacheItem<any>;
