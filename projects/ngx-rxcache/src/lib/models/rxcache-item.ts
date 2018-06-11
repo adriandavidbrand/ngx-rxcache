@@ -51,9 +51,6 @@ export class RxCacheItem<T> {
 
   private instance$: BehaviorSubject<T>;
   get value$(): BehaviorSubject<T> {
-    if (this.construct && !this.loaded$.getValue() && !this.loading$.getValue()) {
-      this.refresh();
-    }
     return this.instance$;
   }
 
