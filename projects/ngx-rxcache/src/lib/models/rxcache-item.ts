@@ -51,7 +51,7 @@ export class RxCacheItem<T> {
 
   private instance$: BehaviorSubject<T>;
   get value$(): BehaviorSubject<T> {
-    if (this.construct && !this.loaded$.getValue()) {
+    if (this.construct && !this.loaded$.getValue() && !this.loading$.getValue()) {
       this.refresh();
     }
     return this.instance$;
@@ -122,7 +122,7 @@ export class RxCacheItem<T> {
     this.nextValue(item);
     this.next(this._hasError$, false);
     this.next(this._error$, undefined);
-    this.next(this._loaded$, true);
+    this.next(this._loaded$, typeof item !== 'undefined');
     this.next(this._loading$, false);
   }
 
