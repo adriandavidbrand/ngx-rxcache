@@ -11,13 +11,22 @@ export class RxCacheItem<T> {
     if (localStorageItem) {
       this.localStorage = true;
     }
-    this.instance$ = new BehaviorSubject<T>((localStorageItem && localStorageItem !== 'undefined') ? JSON.parse(localStorageItem) : config.initialValue);
+    const sessionStorageItem = sessionStorage.getItem(config.id);
+    if (sessionStorageItem) {
+      this.sessionStorage = true;
+    }
+    this.instance$ = new BehaviorSubject<T>(
+      (localStorageItem && localStorageItem !== 'undefined') ? JSON.parse(localStorageItem) : 
+      (sessionStorageItem && sessionStorageItem !== 'undefined') ? JSON.parse(sessionStorageItem) :
+      config.initialValue);
     this.configure(config);
   }
 
   id: string;
   private subscription?: Subscription;
+  private autoLoad?: boolean;
   private localStorage?: boolean;
+  private sessionStorage?: boolean;
   private genericError: string;
 
   private construct?: () => Observable<T>;
@@ -33,7 +42,9 @@ export class RxCacheItem<T> {
       this.next(this._loaded$, true);
     }
 
+    this.autoLoad = config.autoLoad || this.autoLoad;
     this.localStorage = config.localStorage || this.localStorage;
+    this.sessionStorage = config.sessionStorage || this.sessionStorage;
     this.genericError = config.genericError || this.genericError;
 
     this.construct = config.construct || this.construct;
@@ -45,12 +56,15 @@ export class RxCacheItem<T> {
       this.unsubscribe();
     }
     if (config.load) {
-      this.refresh();
+      this.load();
     }
   }
 
   private instance$: BehaviorSubject<T>;
   get value$(): BehaviorSubject<T> {
+    if (this.autoLoad && this.construct && typeof this.instance$.getValue() === 'undefined' && !this.loaded$.getValue() && !this.loading$.getValue()) {
+      this.load();
+    }
     return this.instance$;
   }
 
@@ -112,6 +126,9 @@ export class RxCacheItem<T> {
     if (this.localStorage) {
       localStorage.setItem(this.id, JSON.stringify(item));
     }
+    if (this.sessionStorage) {
+      sessionStorage.setItem(this.id, JSON.stringify(item));
+    }
     this.instance$.next(item);
   }
 
@@ -144,20 +161,24 @@ export class RxCacheItem<T> {
     }
   }
 
-  reload(construct: () => Observable<T>) {
-    this.loaded$.next(false);
-    this.loading$.next(true);
-    this.hasError$.next(false);
-    this.error$.next(undefined);
-    this.unsubscribe();
-    this.construct = construct;
-    this.subscription = construct().subscribe(
-      item => {
-        this.nextValue(item);
-        this._loaded$.next(true);
-        this._loading$.next(false);
-      }, (error) => { this.runErrorHandler(error); }
-    );
+  load(construct?: () => Observable<T>) {
+    if (construct) {
+      this.construct = construct;
+    }
+    if (this.construct) {
+      this.loading$.next(true);
+      this.loaded$.next(false);
+      this.hasError$.next(false);
+      this.error$.next(undefined);
+      this.unsubscribe();
+      this.subscription = this.construct().subscribe(
+        item => {
+          this.nextValue(item);
+          this._loaded$.next(true);
+          this._loading$.next(false);
+        }, (error) => { this.runErrorHandler(error); }
+      );
+    }
   }
 
   reset(item?: T) {
@@ -188,23 +209,6 @@ export class RxCacheItem<T> {
   private complete(bs: BehaviorSubject<any>) {
     if (bs) {
       bs.complete();
-    }
-  }
-
-  refresh() {
-    if (this.construct) {
-      this.loading$.next(true);
-      this.loaded$.next(false);
-      this.hasError$.next(false);
-      this.error$.next(undefined);
-      this.unsubscribe();
-      this.subscription = this.construct().subscribe(
-        item => {
-          this.nextValue(item);
-          this._loaded$.next(true);
-          this._loading$.next(false);
-        }, (error) => { this.runErrorHandler(error); }
-      );
     }
   }
 
