@@ -48,7 +48,7 @@ export interface RxCacheItemConfig<T> {
 }
 ```
 
-A cache item is a simple light weight object the consists of an instance behaviour subject and optional behaviour subjects to signal if loading, loaded, saving, saved, and error states that the item may be in.
+A cache item is a simple light weight object that consists of an instance behaviour subject and optional behaviour subjects to signify the loading, loaded, saving, saved, and error states the item may be in.
 
 ```javascript
 cache.config({ id: 'key' });
@@ -63,14 +63,29 @@ Will return a cache item that only has the instance behaviour subject initialise
 ```javascript
 cache.config({ id: 'key', construct: () => of('Hello').pipe(delay(1000)) });
 ```
-Will return a cache item that only has the instance behaviour subject initialised with it's value set to undefined. Once the load method is called the construct function will be called and the loading$ and loaded$ behaviour subjects will be initiased with true and false respectively and after the one second delay the instance behavior subject will be set to 'Hello', loading will be false and loaded will be true.
+Will return a cache item that only has the instance behaviour subject initialised with it's value set to undefined. Once the load method is called the construct function will be called and the loading$ and loaded$ behaviour subjects will be initiased with true and false respectively. After the one second delay the instance behavior subject will be set to 'Hello', loading will be false and loaded will be true.
 
 ```javascript
 cache.config({ id: 'key', construct: () => of('Hello').pipe(delay(1000)), load: true });
 ```
-Will call the load function as the object is created.
+Will call the load function as the object is created. For the first second, instance is undefined, loading$ is true and loaded$ is false. Once the construct function is finished the instance is 'Hello', loading$ is false and loaded$ is true.
 
 ```javascript
 cache.config({ id: 'key', construct: () => of('Hello').pipe(delay(1000)), autoload: true });
 ```
-Will cause the load function to be called when the instance behaviour subject's accessor property value$ is acceessed and the item has not been loaded.
+Will cause the load function to be called when the instance behaviour subject's accessor property value$ is acceessed if the item has not been loaded.
+
+```javascript
+cache.config({ id: 'key', construct: () => throwError('An error occoured')), load: true });
+```
+Will cause an error when constructing the object, the instance behaviour subject will be undefined, loading$ will be false, loaded$ will be false, hasError$ will be true and error$ will be 'An error has occoured', the global eneric error message.
+
+```javascript
+cache.config({ id: 'key', genericError: 'Oops', construct: () => throwError('An error occoured')), load: true });
+```
+Will cause an error when constructing the object, error$ will be 'Oops'.
+
+```javascript
+cache.config({ id: 'key', construct: () => throwError('An error occoured')), load: true, errorHandler: (id: string, error: any) => `Item with id '${id}' failed with the error: ${error}` });
+```
+Will cause an error when constructing the object, error$ will be "Item with id 'key' failed with the error: An error occoured".
