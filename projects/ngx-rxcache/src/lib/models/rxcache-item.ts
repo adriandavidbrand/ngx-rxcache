@@ -144,8 +144,8 @@ export class RxCacheItem<T> {
     if (this.persist) {
       this.saving$.next(true);
       this.saved$.next(false);
-      this.hasError$.next(false);
-      this.error$.next(undefined);
+      this.next(this.hasError$, false);
+      this.next(this.error$, undefined);
       const finalise = new Subject<boolean>();
       this.persist(this.instance$.getValue()).pipe(takeUntil(finalise)).subscribe(val => {
         if (saved) {
@@ -168,8 +168,8 @@ export class RxCacheItem<T> {
     if (this.construct) {
       this.loading$.next(true);
       this.loaded$.next(false);
-      this.hasError$.next(false);
-      this.error$.next(undefined);
+      this.next(this.hasError$, false);
+      this.next(this.error$, undefined);
       this.unsubscribe();
       this.subscription = this.construct().subscribe(
         item => {
@@ -215,6 +215,7 @@ export class RxCacheItem<T> {
   private runErrorHandler(error: any) {
     const globalConfigError = globalConfig.errorHandler ? globalConfig.errorHandler(this.id, error) : globalConfig.genericError;
     this.error$.next((this.errorHandler ? this.generateErrorMessage(error) : this.genericError) || globalConfigError || globalConfig.genericError);
+    this.hasError$.next(true);
     this.hasError$.next(true);
     if (this.construct) {
       this.loaded$.next(false);
