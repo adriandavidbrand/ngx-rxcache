@@ -24,7 +24,7 @@ export class RxCacheItem<T> {
 
   id: string;
   private subscription?: Subscription;
-  private autoLoad?: boolean;
+  private autoload?: boolean;
   private localStorage?: boolean;
   private sessionStorage?: boolean;
   private genericError: string;
@@ -42,7 +42,7 @@ export class RxCacheItem<T> {
       this.next(this._loaded$, true);
     }
 
-    this.autoLoad = config.autoLoad || this.autoLoad;
+    this.autoload = config.autoload || this.autoload;
     this.localStorage = config.localStorage || this.localStorage;
     this.sessionStorage = config.sessionStorage || this.sessionStorage;
     this.genericError = config.genericError || this.genericError;
@@ -62,7 +62,7 @@ export class RxCacheItem<T> {
 
   private instance$: BehaviorSubject<T>;
   get value$(): BehaviorSubject<T> {
-    if (this.autoLoad && this.construct && typeof this.instance$.getValue() === 'undefined' && !this.loaded$.getValue() && !this.loading$.getValue()) {
+    if (this.autoload && this.construct && typeof this.instance$.getValue() === 'undefined' && !this.loaded$.getValue() && !this.loading$.getValue()) {
       this.load();
     }
     return this.instance$;

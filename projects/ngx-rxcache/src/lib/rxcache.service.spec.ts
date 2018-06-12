@@ -40,13 +40,10 @@ describe('RxCacheService', () => {
     expect(service.exists('test')).toBeFalsy();
   }));
 
-  it('non existing item', inject([RxCacheService], (service: RxCacheService) => {
-    expect(service.exists(`Does't Exist`)).toBeFalsy();
-  }));
-
-  it('should generate item from constructor function', inject([RxCacheService], (service: RxCacheService) => {
+  it('should autoload item from constructor function', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
+      autoload: true,
       construct: () => of(10)
     });
     expect(cacheItem.value$.getValue()).toEqual(10);
@@ -60,15 +57,30 @@ describe('RxCacheService', () => {
     expect(cacheItem.value$.getValue()).toEqual(10);
   }));
 
-  it('should refresh item', inject([RxCacheService], (service: RxCacheService) => {
-    let val = 0;
+  it(`shouldn't be loaded`, inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.config({
       id: 'test',
-      construct: () => of(val)
+      construct: () => of(10)
     });
-    val = 1;
-    cacheItem.refresh();
-    expect(cacheItem.value$.getValue()).toEqual(val);
+    expect(cacheItem.loaded$.getValue()).toBeFalsy();
+  }));
+
+  it('should load item', inject([RxCacheService], (service: RxCacheService) => {
+    const cacheItem = service.config({
+      id: 'test',
+      construct: () => of(10)
+    });
+    cacheItem.load();
+    expect(cacheItem.value$.getValue()).toEqual(10);
+  }));
+
+  it('should be loaded', inject([RxCacheService], (service: RxCacheService) => {
+    const cacheItem = service.config({
+      id: 'test',
+      construct: () => of(10)
+    });
+    cacheItem.load();
+    expect(cacheItem.loaded$.getValue()).toBeTruthy();
   }));
 
   it('should be loading for 5ms', inject([RxCacheService], (service: RxCacheService) => {
@@ -178,7 +190,7 @@ describe('RxCacheService', () => {
     const cacheItem = service.config({
       id: 'test'
     });
-    cacheItem.reload(() => of(10));
+    cacheItem.load(() => of(10));
     expect(cacheItem.value$.getValue()).toEqual(10);
   }));
 

@@ -6,7 +6,7 @@ export interface RxCacheItemConfig<T> {
   persist?: (val: T) => Observable<any>;
   saved?: (val: any) => void;
   load?: boolean;
-  autoLoad?: boolean;
+  autoload?: boolean;
   localStorage?: boolean;
   sessionStorage?: boolean;
   initialValue?: T;
