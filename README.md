@@ -53,4 +53,24 @@ A cache item is a simple light weight object the consists of an instance behavio
 ```javascript
 cache.config({ id: 'key' });
 ```
-Will return a cache item that only has the behaviour subject initialised with it's value set to undefined.
+Will return a cache item that only has the instance behaviour subject initialised with it's value set to undefined.
+
+```javascript
+cache.config({ id: 'key', initialValue: 'Hello' });
+```
+Will return a cache item that only has the instance behaviour subject initialised with it's value set to a string 'Hello'.
+
+```javascript
+cache.config({ id: 'key', construct: () => of('Hello').pipe(delay(1000)) });
+```
+Will return a cache item that only has the instance behaviour subject initialised with it's value set to undefined. Once the load method is called the construct function will be called and the loading$ and loaded$ behaviour subjects will be initiased with true and false respectively and after the one second delay the instance behavior subject will be set to 'Hello', loading will be false and loaded will be true.
+
+```javascript
+cache.config({ id: 'key', construct: () => of('Hello').pipe(delay(1000)), load: true });
+```
+Will call the load function as the object is created.
+
+```javascript
+cache.config({ id: 'key', construct: () => of('Hello').pipe(delay(1000)), autoload: true });
+```
+Will cause the load function to be called when the instance behaviour subject's accessor property value$ is acceessed and the item has not been loaded.
