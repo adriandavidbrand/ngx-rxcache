@@ -63,7 +63,7 @@ Will return a cache item that only has the instance behaviour subject initialise
 ```javascript
 cache.config({ id: 'key', construct: () => of('Hello').pipe(delay(1000)) });
 ```
-Will return a cache item that only has the instance behaviour subject initialised with it's value set to undefined. Once the load method is called the construct function will be called and the loading$ and loaded$ behaviour subjects will be initiased with true and false respectively. After the one second delay the instance behavior subject will be set to 'Hello', loading will be false and loaded will be true.
+Will return a cache item that only has the instance behaviour subject initialised with it's value set to undefined. Once the load method is called the construct function will be called and the loading$ and loaded$ behaviour subjects will be initiased with true and false respectively. After the one second delay the instance behavior subject will be set to 'Hello', loading$ will be false$ and loaded will be true.
 
 ```javascript
 cache.config({ id: 'key', construct: () => of('Hello').pipe(delay(1000)), load: true });
