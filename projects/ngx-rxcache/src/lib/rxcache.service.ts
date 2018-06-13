@@ -8,22 +8,15 @@ import { globalConfig } from './models/rxcache-global-config';
 export class RxCacheService {
   private cacheItems: RxCacheItem<any>[] = [];
 
-  config<T>(config: RxCacheItemConfig<T>) {
+  get<T>(idOrConfig: string | RxCacheItemConfig<T>): RxCacheItem<T> {
+    const paramIsString = typeof idOrConfig === "string";
+    const config: RxCacheItemConfig<T> = paramIsString ? { id: idOrConfig as string } : idOrConfig as RxCacheItemConfig<T>;
     let cacheItem = this.cacheItems.find(i => i.id === config.id);
     if (!cacheItem) {
       cacheItem = new RxCacheItem<T>(config);
       this.cacheItems = [ ...this.cacheItems, cacheItem ];
-    } else {
+    } else if (!paramIsString) {
       cacheItem.configure(config);
-    }
-    return cacheItem;
-  }
-
-  get<T>(id: string): RxCacheItem<T> {
-    let cacheItem = this.cacheItems.find(i => i.id === id);
-    if (!cacheItem) {
-      cacheItem = new RxCacheItem<T>({ id });
-      this.cacheItems = [ ...this.cacheItems, cacheItem ];
     }
     return cacheItem;
   }
