@@ -4,7 +4,7 @@ RxCache is a light weight RxJs Behavior Subject based cache designed as a replac
 
 [Testbed on StackBlitz](https://stackblitz.com/edit/angular-3yqpfe)
 
-[A redo of the official ngrx example app can be seen here StackBlitz](https://stackblitz.com/edit/github-tsrf1f)
+[A redo of the official ngrx example app can be seen here on StackBlitz](https://stackblitz.com/edit/github-tsrf1f)
 
 ## Usage
 
@@ -31,6 +31,36 @@ export class YourService {
   update = (value) => { this.item.update(value); };
 }
 ```
+The cache has methods for configuring, retrieving, checking for the existence of and deleting items. It also has methods for setting the global error message and handler.
+
+A cache item is a simple light weight object that consists of an instance behaviour subject and optional behaviour subjects to signify the loading, loaded, saving, saved, and error states the item may be in.
+
+```javascript
+cache.get('key');
+```
+Will retrieve an existing item from the cache or create a new one if one is not found.
+
+```javascript
+const exists = cache.exists('key');
+```
+Returns a boolean the check if an item with that key exists in the cache.
+
+```javascript
+cache.delete('key');
+```
+Will delete the item from the cache, complete all behaviour subjects and unsubscribe from the construct function.
+
+```javascript
+cache.genericError('An error has occoured');
+```
+Will set the global generic error message
+
+```javascript
+cache.errorHandler((key, error) => {
+  logger.log(`Item with key '${key}' caused the error the error: ${error}`);
+});
+```
+Will set the global generic error handler. If the error handler return a string it will be used as the error message for the error$ behaviour subject.
 
 The config method takes in an object with the interface
 
@@ -50,7 +80,6 @@ export interface RxCacheItemConfig<T> {
 }
 ```
 
-A cache item is a simple light weight object that consists of an instance behaviour subject and optional behaviour subjects to signify the loading, loaded, saving, saved, and error states the item may be in.
 
 ```javascript
 cache.config({ id: 'key' });
