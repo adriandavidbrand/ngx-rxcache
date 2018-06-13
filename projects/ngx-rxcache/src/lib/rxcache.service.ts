@@ -28,7 +28,7 @@ export class RxCacheService {
     return cacheItem;
   }
 
-  exists (id: string): boolean {
+  exists(id: string): boolean {
     return !!this.cacheItems.find(i => i.id === id);
   }
 
