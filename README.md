@@ -36,7 +36,7 @@ The cache has methods for configuring, retrieving, checking for the existence of
 A cache item is a simple light weight object that consists of an instance behaviour subject and optional behaviour subjects to signify the loading, loaded, saving, saved, and error states the item may be in.
 
 ```javascript
-cache.get('key');
+const item = cache.get('key');
 ```
 Will retrieve an existing item from the cache or create a new one if one is not found.
 
