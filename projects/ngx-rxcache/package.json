@@ -1,6 +1,6 @@
 {
   "name": "ngx-rxcache",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "peerDependencies": {
     "@angular/common": "^6.0.0",
     "@angular/core": "^6.0.0"

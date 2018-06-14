@@ -20,12 +20,12 @@ describe('RxCacheService', () => {
   }));
 
   it('should exist', inject([RxCacheService], (service: RxCacheService) => {
-    service.config({ id: 'test' });
+    service.get({ id: 'test' });
     expect(service.exists('test')).toBeTruthy();
   }));
 
   it('should equal initial value', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       initialValue: 10
     });
@@ -33,7 +33,7 @@ describe('RxCacheService', () => {
   }));
 
   it('deleted item should not exist', inject([RxCacheService], (service: RxCacheService) => {
-    service.config({
+    service.get({
       id: 'test'
     });
     service.delete('test');
@@ -41,7 +41,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should autoload item from constructor function', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       autoload: true,
       construct: () => of(10)
@@ -50,7 +50,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should update item', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test'
     });
     cacheItem.update(10);
@@ -58,7 +58,7 @@ describe('RxCacheService', () => {
   }));
 
   it(`shouldn't be loaded`, inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       construct: () => of(10)
     });
@@ -66,7 +66,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should load item', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       construct: () => of(10)
     });
@@ -75,7 +75,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should be loaded', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       construct: () => of(10)
     });
@@ -84,7 +84,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should be loading for 5ms', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       load: true,
       construct: () => of(10).pipe(delay(5))
@@ -93,7 +93,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should be not be loaded for 5ms', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       load: true,
       construct: () => of(10).pipe(delay(5))
@@ -102,7 +102,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should not be loading after 5ms', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       load: true,
       construct: () => of(10).pipe(delay(5))
@@ -113,7 +113,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should be loaded after 5ms', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       load: true,
       construct: () => of(10).pipe(delay(5))
@@ -124,7 +124,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should be saving for 5ms', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       persist: (val) => of(val).pipe(delay(5))
     });
@@ -133,7 +133,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should be not be saved for 5ms', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       persist: (val) => of(val).pipe(delay(5))
     });
@@ -142,7 +142,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should not be saving after 5ms', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       persist: (val) => of(val).pipe(delay(5))
     });
@@ -153,7 +153,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should be saved after 5ms', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       persist: (val) => of(val).pipe(delay(5))
     });
@@ -165,7 +165,7 @@ describe('RxCacheService', () => {
 
   it('should run saved', inject([RxCacheService], (service: RxCacheService) => {
     let test;
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       initialValue: 10,
       persist: (val) => of(val),
@@ -177,7 +177,7 @@ describe('RxCacheService', () => {
 
   it('should run custom saved', inject([RxCacheService], (service: RxCacheService) => {
     let test;
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       initialValue: 10,
       persist: (val) => of(val)
@@ -187,7 +187,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should reload item', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test'
     });
     cacheItem.load(() => of(10));
@@ -195,7 +195,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should error with generic error message', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       load: true,
       construct: () => throwError('Fail')
@@ -204,7 +204,7 @@ describe('RxCacheService', () => {
   }));
 
   it('should error with generic custom message', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: 'test',
       load: true,
       genericError: 'I failed',
@@ -215,7 +215,7 @@ describe('RxCacheService', () => {
 
   it('should error with error handler', inject([RxCacheService], (service: RxCacheService) => {
     const id = 'test';
-    const cacheItem = service.config({
+    const cacheItem = service.get({
       id: id,
       load: true,
       errorHandler: (id: string, error: any) => `${id} ${error}`,
