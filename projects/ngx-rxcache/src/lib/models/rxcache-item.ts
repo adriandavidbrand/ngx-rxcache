@@ -133,6 +133,7 @@ export class RxCacheItem<T> {
   }
 
   update(item: T) {
+    this.unsubscribe();
     this.nextValue(item);
     this.next(this._hasError$, false);
     this.next(this._error$, undefined);
