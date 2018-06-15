@@ -123,6 +123,18 @@ describe('RxCacheService', () => {
     }, 6);
   }));
 
+  it('should unsubscribe from constructor on update', inject([RxCacheService], (service: RxCacheService) => {
+    const cacheItem = service.get({
+      id: 'test',
+      load: true,
+      construct: () => of(10).pipe(delay(5))
+    });
+    cacheItem.update(5);
+    setTimeout(() => {
+      expect(cacheItem.value$.getValue()).toEqual(5);
+    }, 6);
+  }));
+
   it('should be saving for 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
@@ -214,13 +226,110 @@ describe('RxCacheService', () => {
   }));
 
   it('should error with error handler', inject([RxCacheService], (service: RxCacheService) => {
-    const id = 'test';
     const cacheItem = service.get({
-      id: id,
+      id: 'test',
       load: true,
       errorHandler: (id: string, error: any) => `${id} ${error}`,
       construct: () => throwError('Fail')
     });
     expect(cacheItem.error$.getValue()).toEqual(`${cacheItem.id} Fail`);
+  }));
+
+  it('should get value from localStorage', inject([RxCacheService], (service: RxCacheService) => {
+    const id = 'test';
+    localStorage.setItem(id, '10');
+    const cacheItem = service.get({
+      id: id
+    });
+    localStorage.removeItem(id);
+    expect(cacheItem.value$.getValue()).toEqual(10);
+  }));
+
+  it('should save value to localStorage', inject([RxCacheService], (service: RxCacheService) => {
+    const id = 'test';
+    const cacheItem = service.get({
+      id: id,
+      localStorage: true
+    });
+    cacheItem.update(10);
+    const localStorageItem = localStorage.getItem(id);
+    localStorage.removeItem(id);
+    expect(localStorageItem).toEqual('10');
+  }));
+
+  it('should parse localStorage item', inject([RxCacheService], (service: RxCacheService) => {
+    const id = 'test';
+    const date = new Date();
+    localStorage.setItem(id, JSON.stringify(date.getTime()));
+    const cacheItem = service.get({
+      id: id,
+      localStorage: true,
+      parse: (val) => new Date(val)
+    });
+    localStorage.removeItem(id);
+    expect(cacheItem.value$.getValue().getTime()).toEqual(date.getTime());
+  }));
+
+  it('should stringify localStorage item', inject([RxCacheService], (service: RxCacheService) => {
+    const id = 'test';
+    const cacheItem = service.get({
+      id: id,
+      localStorage: true,
+      stringify: (val: Date) => val.getTime()
+    });
+    const date = new Date();
+    cacheItem.update(date);
+    const localStorageItem = localStorage.getItem(id);
+    localStorage.removeItem(id);
+    expect(localStorageItem).toEqual(JSON.stringify(date.getTime()));
+  }));
+
+  it('should get value from sessionStorage', inject([RxCacheService], (service: RxCacheService) => {
+    const id = 'test';
+    sessionStorage.setItem(id, '10');
+    const cacheItem = service.get({
+      id: id
+    });
+    sessionStorage.removeItem(id);
+    expect(cacheItem.value$.getValue()).toEqual(10);
+  }));
+
+  it('should save value to sessionStorage', inject([RxCacheService], (service: RxCacheService) => {
+    const id = 'test';
+    const cacheItem = service.get({
+      id: id,
+      sessionStorage: true
+    });
+    cacheItem.update(10);
+    const sessionStorageItem = sessionStorage.getItem(id);
+    sessionStorage.removeItem(id);
+    expect(sessionStorageItem).toEqual('10');
+  }));
+
+  it('should parse sessionStorage item', inject([RxCacheService], (service: RxCacheService) => {
+    const id = 'test';
+    const date = new Date();
+    sessionStorage.setItem(id, JSON.stringify(date.getTime()));
+    const cacheItem = service.get({
+      id: id,
+      sessionStorage: true,
+      parse: (val) => new Date(val)
+    });
+    sessionStorage.removeItem(id);
+    expect(cacheItem.value$.getValue().getTime()).toEqual(date.getTime());
+  }));
+
+  it('should stringify sessionStorage item', inject([RxCacheService], (service: RxCacheService) => {
+    const id = 'test';
+    const cacheItem = service.get({
+      id: id,
+      sessionStorage: true,
+      stringify: (val: Date) => val.getTime()
+    });
+    const date = new Date();
+    cacheItem.update(date);
+    const sessionStorageItem = sessionStorage.getItem(id);
+    sessionStorage.removeItem(id);
+    expect(sessionStorageItem).toEqual(JSON.stringify(date.getTime()));
   }));
 });

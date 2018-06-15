@@ -5,6 +5,8 @@ export interface RxCacheItemConfig<T> {
   construct?: () => Observable<T>;
   persist?: (val: T) => Observable<any>;
   saved?: (val: any) => void;
+  stringify?: (val: T) => any;
+  parse?: (val: any) => T;
   load?: boolean;
   autoload?: boolean;
   localStorage?: boolean;

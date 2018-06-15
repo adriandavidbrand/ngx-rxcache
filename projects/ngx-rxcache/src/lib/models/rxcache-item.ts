@@ -16,8 +16,8 @@ export class RxCacheItem<T> {
       this.sessionStorage = true;
     }
     this.instance$ = new BehaviorSubject<T>(
-      (localStorageItem && localStorageItem !== 'undefined') ? JSON.parse(localStorageItem) : 
-      (sessionStorageItem && sessionStorageItem !== 'undefined') ? JSON.parse(sessionStorageItem) :
+      (localStorageItem && localStorageItem !== 'undefined') ? config.parse ? config.parse(JSON.parse(localStorageItem)) : JSON.parse(localStorageItem) : 
+      (sessionStorageItem && sessionStorageItem !== 'undefined') ? config.parse ? config.parse(JSON.parse(sessionStorageItem)) : JSON.parse(sessionStorageItem) :
       config.initialValue);
     this.configure(config);
   }
@@ -31,8 +31,12 @@ export class RxCacheItem<T> {
 
   private construct?: () => Observable<T>;
   private persist?: (val: T) => Observable<any>;
+
   private saved?: (val: any) => void;
   private errorHandler?: (id: string, error?: any) => string;
+
+  private stringify?: (val: T) => any;
+  private parse?: (val: any) => T;
 
   configure(config: RxCacheItemConfig<T>) {
     const hasInitialValue = typeof config.initialValue !== 'undefined';
@@ -51,6 +55,8 @@ export class RxCacheItem<T> {
     this.persist = config.persist || this.persist;
     this.saved = config.saved || this.saved;
     this.errorHandler = config.errorHandler || this.errorHandler;
+    this.stringify = config.stringify || this.stringify;
+    this.parse = config.parse || this.parse;
 
     if (config.construct) {
       this.unsubscribe();
@@ -124,10 +130,10 @@ export class RxCacheItem<T> {
 
   private nextValue(item: T) {
     if (this.localStorage) {
-      localStorage.setItem(this.id, JSON.stringify(item));
+      localStorage.setItem(this.id, this.stringify ? JSON.stringify(this.stringify(item)) : JSON.stringify(item));
     }
     if (this.sessionStorage) {
-      sessionStorage.setItem(this.id, JSON.stringify(item));
+      sessionStorage.setItem(this.id, this.stringify ? JSON.stringify(this.stringify(item)): JSON.stringify(item));
     }
     this.instance$.next(item);
   }
