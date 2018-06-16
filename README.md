@@ -70,6 +70,8 @@ export interface RxCacheItemConfig<T> {
   construct?: () => Observable<T>; // An optional constructor function that returns an observable of your type
   persist?: (val: T) => Observable<any>; // An optional save function that persists the current instance
   saved?: (val: any) => void; // An optional save callback function that is called after the persist method succeeds
+  stringify?: (val: T) => any; // An optional function to transform the value before it is stringified for storage
+  parse?: (val: any) => T; // An optional function to transform the value after it is parse from storage
   load?: boolean; // An optional flag to call the constructor function as soon as the item is created
   autoload?: boolean; // An optional flag to call the constructor function when the value$ accessor property is called if it is not already loaded
   localStorage?: boolean; // A optional flag to persist the value in localStorage to survive across browser sessions
@@ -120,3 +122,28 @@ Will cause an error when constructing the object, error$ will be 'Oops'.
 cache.get({ id: 'key', construct: () => throwError('An error occoured')), load: true, errorHandler: (id: string, error: any) => `Item with id '${id}' failed with the error: ${error}` });
 ```
 Will cause an error when constructing the object, error$ will be "Item with id 'key' failed with the error: An error occoured".
+
+## Persistence to localStorage and sessionStorage
+
+```javascript
+cache.get({ id: 'key', localStorage: true });
+```
+Will store the value in localStorage on every update so the value can survive between browser sessions
+
+```javascript
+cache.get({ id: 'key', sessionStorage: true });
+```
+Will store the value in sessionStorage on every update so the value can survive browser refresh
+
+Some values such as dates do not persist well in sessionStorage and localStorage as they are turned into a string when JSON.stringify is used to turn the value into string for storage. There are two transformation functions that can be used to transform objects before being stringified and after being parsed.
+
+```javascript
+cache.get({
+  id: 'key',
+  stringify: (val) => ({ ...val, date: val.date.getTime() }),
+  parse: (val) => ({ ...val, date: new Date(val.date) })
+});
+```
+Will transform the value's date property into number of milliseconds before it is stringified for storage and transform the date property back to a date object after it is parsed from storage.
+
+Using a parse function can cause unexpected behaviour if cache.find('key') is used before cache({id: 'key', parse: parseFunction }). When cache.get is called with a string for the key instead of a config object it will create one if it is not found. The constructor of the cache item object will instanciate with the value in local or session storage if the key matches a key in local or session storage. If then later cache.get is called with a config object that has a parse function the item will already have a value and the parse function will not run on value that was retrived from storage. This is the only case where the order of calling get with a string or config object matters. If you are using storage transformation functions you must make sure the cache.get(configObject) happens before cache.get(key) to gaurantee the stored value is parsed by the parse function.
