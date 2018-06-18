@@ -8,6 +8,8 @@ import { globalConfig } from './models/rxcache-global-config';
 export class RxCacheService {
   private cacheItems: RxCacheItem<any>[] = [];
 
+  get<T>(id: string): RxCacheItem<T>;
+  get<T>(config: RxCacheItemConfig<T>): RxCacheItem<T>;
   get<T>(idOrConfig: string | RxCacheItemConfig<T>): RxCacheItem<T> {
     const paramIsString = typeof idOrConfig === "string";
     const config: RxCacheItemConfig<T> = paramIsString ? { id: idOrConfig as string } : idOrConfig as RxCacheItemConfig<T>;

@@ -198,6 +198,27 @@ describe('RxCacheService', () => {
     expect(test).toEqual(10);
   }));
 
+  it('should save non updated value', inject([RxCacheService], (service: RxCacheService) => {
+    let test;
+    const cacheItem = service.get({
+      id: 'test',
+      persist: (val) => { test = val; return of('Ok'); }
+    });
+    cacheItem.save(10);
+    expect(test).toEqual(10);
+  }));
+
+  it('should save non updated value', inject([RxCacheService], (service: RxCacheService) => {
+    let test;
+    let message;
+    const cacheItem = service.get({
+      id: 'test',
+      persist: (val) => { test = val; return of('Ok'); }
+    });
+    cacheItem.save(10, (response, value) => { message = `Server responded with ${response} and value was ${value}`; });
+    expect(message).toEqual('Server responded with Ok and value was 10');
+  }));
+
   it('should reload item', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test'
@@ -229,10 +250,10 @@ describe('RxCacheService', () => {
     const cacheItem = service.get({
       id: 'test',
       load: true,
-      errorHandler: (id: string, error: any) => `${id} ${error}`,
+      errorHandler: (error: any) => `${error}`,
       construct: () => throwError('Fail')
     });
-    expect(cacheItem.error$.getValue()).toEqual(`${cacheItem.id} Fail`);
+    expect(cacheItem.error$.getValue()).toEqual('Fail');
   }));
 
   it('should get value from localStorage', inject([RxCacheService], (service: RxCacheService) => {
