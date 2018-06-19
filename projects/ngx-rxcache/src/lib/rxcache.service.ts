@@ -42,7 +42,7 @@ export class RxCacheService {
     globalConfig.genericError = genericError;
   }
 
-  errorHandler(errorHandler: (id: string, error?: any) => string) {
+  errorHandler(errorHandler: (id: string, error: any, value?: any) => string) {
     globalConfig.errorHandler = errorHandler;
   }
 }

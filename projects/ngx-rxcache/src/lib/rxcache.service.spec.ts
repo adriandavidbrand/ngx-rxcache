@@ -208,7 +208,7 @@ describe('RxCacheService', () => {
     expect(test).toEqual(10);
   }));
 
-  it('should save non updated value', inject([RxCacheService], (service: RxCacheService) => {
+  it('should save non updated value and run callback function', inject([RxCacheService], (service: RxCacheService) => {
     let test;
     let message;
     const cacheItem = service.get({
@@ -254,6 +254,17 @@ describe('RxCacheService', () => {
       construct: () => throwError('Fail')
     });
     expect(cacheItem.error$.getValue()).toEqual('Fail');
+  }));
+
+  it('should error with global error handler', inject([RxCacheService], (service: RxCacheService) => {
+    service.errorHandler((id, error, value) => `Item with id: '${id}' caused error: '${error}' and had value '${value}'`);
+    const cacheItem = service.get({
+      id: 'test',
+      load: true,
+      construct: () => throwError('Fail')
+    });
+    service.errorHandler(undefined);
+    expect(cacheItem.error$.getValue()).toEqual(`Item with id: 'test' caused error: 'Fail' and had value 'undefined'`);
   }));
 
   it('should get value from localStorage', inject([RxCacheService], (service: RxCacheService) => {
