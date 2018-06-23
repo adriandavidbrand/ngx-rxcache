@@ -33,7 +33,7 @@ export class RxCacheItem<T> {
   private persist?: (value: T) => Observable<any>;
 
   private saved?: (response: any, val?: T) => void;
-  private errorHandler?: (error: any, value?: T) => string;
+  private errorHandler?: (error: any, value?: T) => string | void;
 
   private stringify?: (value: T) => any;
   private parse?: (value: any) => T;

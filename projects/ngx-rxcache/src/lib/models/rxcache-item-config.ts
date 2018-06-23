@@ -13,5 +13,5 @@ export interface RxCacheItemConfig<T> {
   sessionStorage?: boolean;
   initialValue?: T;
   genericError?: string;
-  errorHandler?: (error: any, value?: T) => string;
+  errorHandler?: (error: any, value?: T) => string | void;
 }
