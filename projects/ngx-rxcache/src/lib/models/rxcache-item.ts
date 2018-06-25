@@ -73,6 +73,14 @@ export class RxCacheItem<T> {
     }
     return this.instance$;
   }
+  
+  _clone$: Observable<T>;
+  get clone$(): Observable<T> {
+    if (!this.clone$) {
+      this._clone$ = this.value$.map(value => clone(value));
+    }
+    return this._clone$;
+  }
 
   private _loaded$: BehaviorSubject<boolean>;
   get loaded$(): BehaviorSubject<boolean> {
