@@ -3,6 +3,6 @@ export const clone = obj =>
     ? obj.map(item => clone(item))
     : obj instanceof Date
       ? new Date(obj.getTime())
-      : obj && typeof obj === 'object'
+      : typeof obj === 'object' && obj
         ? Object.getOwnPropertyNames(obj).reduce((copy, prop) => ({ ...copy, [prop]: clone(obj[prop]) }), {})
         : obj;
