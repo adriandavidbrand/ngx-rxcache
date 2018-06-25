@@ -32,6 +32,30 @@ describe('RxCacheService', () => {
     expect(cacheItem.value$.getValue()).toEqual(10);
   }));
 
+  it('clone$ should copy property', inject([RxCacheService], (service: RxCacheService) => {
+    const obj = { prop1: 'prop1' };
+    const cacheItem = service.get({
+      id: 'test',
+      initialValue: obj
+    });
+    let clone;
+    const subscription = cacheItem.clone$.subscribe(item => { clone = item; });
+    subscription.unsubscribe();
+    expect(cacheItem.value$.getValue().prop1 === clone.prop1).toBeTruthy();
+  }));
+
+  it('clone should not be the same instance', inject([RxCacheService], (service: RxCacheService) => {
+    const obj = { prop1: 'prop1' };
+    const cacheItem = service.get({
+      id: 'test',
+      initialValue: obj
+    });
+    let clone;
+    const subscription = cacheItem.clone$.subscribe(item => { clone = item; });
+    subscription.unsubscribe();
+    expect(cacheItem.value$.getValue() === clone).toBeFalsy();
+  }));
+
   it('deleted item should not exist', inject([RxCacheService], (service: RxCacheService) => {
     service.get({
       id: 'test'

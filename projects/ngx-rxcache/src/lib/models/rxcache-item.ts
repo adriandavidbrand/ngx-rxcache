@@ -1,8 +1,9 @@
 import { Observable, BehaviorSubject, Subscription, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, map } from 'rxjs/operators';
 
 import { RxCacheItemConfig } from './rxcache-item-config';
 import { globalConfig } from './rxcache-global-config';
+import { clone } from '../clone';
 
 export class RxCacheItem<T> {
   constructor (config: RxCacheItemConfig<T>) {
@@ -76,8 +77,8 @@ export class RxCacheItem<T> {
   
   private _clone$: Observable<T>;
   get clone$(): Observable<T> {
-    if (!this.clone$) {
-      this._clone$ = this.value$.map(value => clone(value));
+    if (!this._clone$) {
+      this._clone$ = this.value$.pipe(map(value => clone(value)));
     }
     return this._clone$;
   }
