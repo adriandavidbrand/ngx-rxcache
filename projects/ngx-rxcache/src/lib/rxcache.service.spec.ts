@@ -162,7 +162,7 @@ describe('RxCacheService', () => {
   it('should be saving for 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
-      persist: (val) => of(val).pipe(delay(5))
+      save: (val) => of(val).pipe(delay(5))
     });
     cacheItem.save();
     expect(cacheItem.saving$.getValue()).toBeTruthy();
@@ -171,7 +171,7 @@ describe('RxCacheService', () => {
   it('should be not be saved for 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
-      persist: (val) => of(val).pipe(delay(5))
+      save: (val) => of(val).pipe(delay(5))
     });
     cacheItem.save();
     expect(cacheItem.saved$.getValue()).toBeFalsy();
@@ -180,7 +180,7 @@ describe('RxCacheService', () => {
   it('should not be saving after 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
-      persist: (val) => of(val).pipe(delay(5))
+      save: (val) => of(val).pipe(delay(5))
     });
     cacheItem.save();
     setTimeout(() => {
@@ -191,7 +191,7 @@ describe('RxCacheService', () => {
   it('should be saved after 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
-      persist: (val) => of(val).pipe(delay(5))
+      save: (val) => of(val).pipe(delay(5))
     });
     cacheItem.save();
     setTimeout(() => {
@@ -204,7 +204,7 @@ describe('RxCacheService', () => {
     const cacheItem = service.get({
       id: 'test',
       initialValue: 10,
-      persist: (val) => of(val),
+      save: (val) => of(val),
       saved: (val) => { test = val; }
     });
     cacheItem.save();
@@ -216,7 +216,7 @@ describe('RxCacheService', () => {
     const cacheItem = service.get({
       id: 'test',
       initialValue: 10,
-      persist: (val) => of(val)
+      save: (val) => of(val)
     });
     cacheItem.save((val) => { test = val; });
     expect(test).toEqual(10);
@@ -226,7 +226,7 @@ describe('RxCacheService', () => {
     let test;
     const cacheItem = service.get({
       id: 'test',
-      persist: (val) => { test = val; return of('Ok'); }
+      save: (val) => { test = val; return of('Ok'); }
     });
     cacheItem.save(10);
     expect(test).toEqual(10);
@@ -237,7 +237,7 @@ describe('RxCacheService', () => {
     let message;
     const cacheItem = service.get({
       id: 'test',
-      persist: (val) => { test = val; return of('Ok'); }
+      save: (val) => { test = val; return of('Ok'); }
     });
     cacheItem.save(10, (response, value) => { message = `Server responded with ${response} and value was ${value}`; });
     expect(message).toEqual('Server responded with Ok and value was 10');

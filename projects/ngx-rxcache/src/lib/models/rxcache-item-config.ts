@@ -1,9 +1,9 @@
-import { Observable } from "rxjs";
+import { Observable } from 'rxjs';
 
 export interface RxCacheItemConfig<T> {
   id: string;
   construct?: () => Observable<T>;
-  persist?: (value: T) => Observable<any>;
+  save?: (value: T) => Observable<any>;
   saved?: (response: any, value?: T) => void;
   stringify?: (value: T) => any;
   parse?: (value: any) => T;

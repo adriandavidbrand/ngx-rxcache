@@ -6,7 +6,7 @@ import { globalConfig } from './rxcache-global-config';
 import { clone } from '../clone';
 
 export class RxCacheItem<T> {
-  constructor (config: RxCacheItemConfig<T>) {
+  constructor(config: RxCacheItemConfig<T>) {
     this.id = config.id;
     const localStorageItem = localStorage.getItem(config.id);
     if (localStorageItem) {
@@ -17,9 +17,16 @@ export class RxCacheItem<T> {
       this.sessionStorage = true;
     }
     this.instance$ = new BehaviorSubject<T>(
-      (localStorageItem && localStorageItem !== 'undefined') ? config.parse ? config.parse(JSON.parse(localStorageItem)) : JSON.parse(localStorageItem) : 
-      (sessionStorageItem && sessionStorageItem !== 'undefined') ? config.parse ? config.parse(JSON.parse(sessionStorageItem)) : JSON.parse(sessionStorageItem) :
-      config.initialValue);
+      localStorageItem && localStorageItem !== 'undefined'
+        ? config.parse
+          ? config.parse(JSON.parse(localStorageItem))
+          : JSON.parse(localStorageItem)
+        : sessionStorageItem && sessionStorageItem !== 'undefined'
+          ? config.parse
+            ? config.parse(JSON.parse(sessionStorageItem))
+            : JSON.parse(sessionStorageItem)
+          : config.initialValue
+    );
     this.configure(config);
   }
 
@@ -31,7 +38,7 @@ export class RxCacheItem<T> {
   private genericError: string;
 
   private construct?: () => Observable<T>;
-  private persist?: (value: T) => Observable<any>;
+  private _save?: (value: T) => Observable<any>;
 
   private saved?: (response: any, val?: T) => void;
   private errorHandler?: (error: any, value?: T) => string | void;
@@ -53,7 +60,7 @@ export class RxCacheItem<T> {
     this.genericError = config.genericError || this.genericError;
 
     this.construct = config.construct || this.construct;
-    this.persist = config.persist || this.persist;
+    this._save = config.save || this._save;
     this.saved = config.saved || this.saved;
     this.errorHandler = config.errorHandler || this.errorHandler;
     this.stringify = config.stringify || this.stringify;
@@ -69,12 +76,18 @@ export class RxCacheItem<T> {
 
   private instance$: BehaviorSubject<T>;
   get value$(): BehaviorSubject<T> {
-    if (this.autoload && this.construct && typeof this.instance$.getValue() === 'undefined' && !this.loaded$.getValue() && !this.loading$.getValue()) {
+    if (
+      this.autoload &&
+      this.construct &&
+      typeof this.instance$.getValue() === 'undefined' &&
+      !this.loaded$.getValue() &&
+      !this.loading$.getValue()
+    ) {
       this.load();
     }
     return this.instance$;
   }
-  
+
   private _clone$: Observable<T>;
   get clone$(): Observable<T> {
     if (!this._clone$) {
@@ -90,7 +103,7 @@ export class RxCacheItem<T> {
     }
     return this._loaded$;
   }
-  
+
   private _loading$: BehaviorSubject<boolean>;
   get loading$(): BehaviorSubject<boolean> {
     if (!this._loading$) {
@@ -142,7 +155,7 @@ export class RxCacheItem<T> {
       localStorage.setItem(this.id, this.stringify ? JSON.stringify(this.stringify(value)) : JSON.stringify(value));
     }
     if (this.sessionStorage) {
-      sessionStorage.setItem(this.id, this.stringify ? JSON.stringify(this.stringify(value)): JSON.stringify(value));
+      sessionStorage.setItem(this.id, this.stringify ? JSON.stringify(this.stringify(value)) : JSON.stringify(value));
     }
     this.instance$.next(value);
   }
@@ -155,32 +168,46 @@ export class RxCacheItem<T> {
     this.next(this._loaded$, typeof value !== 'undefined');
     this.next(this._loading$, false);
   }
-  
+
   save();
   save(value: T);
   save(saved: (value: any) => void);
   save(value: T, saved: (response: any, value: any) => void);
-  save(valueOrSaved?: T | ((response: any, value?: any) => void), savedOrUndefined?: (response: any, value?: any) => void) {
+  save(
+    valueOrSaved?: T | ((response: any, value?: any) => void),
+    savedOrUndefined?: (response: any, value?: any) => void
+  ) {
     const valueOrSavedIsFunction = typeof valueOrSaved === 'function';
-    const value: T = valueOrSavedIsFunction || typeof valueOrSaved === 'undefined' ? this.instance$.getValue() : valueOrSaved as T;
-    const saved: (response: any, value?: any) => void = valueOrSavedIsFunction ? valueOrSaved as (response: any, value?: any) => void : savedOrUndefined;
-    if (this.persist) {
+    const value: T =
+      valueOrSavedIsFunction || typeof valueOrSaved === 'undefined' ? this.instance$.getValue() : (valueOrSaved as T);
+    const saved: (response: any, value?: any) => void = valueOrSavedIsFunction
+      ? (valueOrSaved as (response: any, value?: any) => void)
+      : savedOrUndefined;
+    if (this._save) {
       this.saving$.next(true);
       this.saved$.next(false);
       this.next(this.hasError$, false);
       this.next(this.error$, undefined);
       const finalise = new Subject<boolean>();
-      this.persist(value).pipe(takeUntil(finalise)).subscribe(response => {
-        if (saved) {
-          saved(response, value);
-        }
-        if (this.saved) {
-          this.saved(response);
-        }
-        this._saved$.next(true);
-        this._saving$.next(false);
-        finalise.next(true);
-      }, (error) => { this.runErrorHandler(error, value); finalise.next(true); });
+      this._save(value)
+        .pipe(takeUntil(finalise))
+        .subscribe(
+          response => {
+            if (saved) {
+              saved(response, value);
+            }
+            if (this.saved) {
+              this.saved(response, value);
+            }
+            this._saved$.next(true);
+            this._saving$.next(false);
+            finalise.next(true);
+          },
+          error => {
+            this.runErrorHandler(error, value);
+            finalise.next(true);
+          }
+        );
     }
   }
 
@@ -199,7 +226,10 @@ export class RxCacheItem<T> {
           this.nextValue(item);
           this._loaded$.next(true);
           this._loading$.next(false);
-        }, (error) => { this.runErrorHandler(error); }
+        },
+        error => {
+          this.runErrorHandler(error);
+        }
       );
     }
   }
@@ -236,18 +266,20 @@ export class RxCacheItem<T> {
   }
 
   private runErrorHandler(error: any, value?: T) {
-    const globalConfigError = globalConfig.errorHandler ? globalConfig.errorHandler(this.id, error, value) : globalConfig.genericError;
-    this.error$.next((this.errorHandler ? this.generateErrorMessage(error, value) : this.genericError) || globalConfigError || globalConfig.genericError);
+    const globalConfigError = globalConfig.errorHandler
+      ? globalConfig.errorHandler(this.id, error, value)
+      : globalConfig.genericError;
+    this.error$.next(
+      (this.errorHandler ? this.generateErrorMessage(error, value) : this.genericError) ||
+        globalConfigError ||
+        globalConfig.genericError
+    );
     this.hasError$.next(true);
     this.hasError$.next(true);
-    if (this.construct) {
-      this.loaded$.next(false);
-      this.loading$.next(false);
-    }
-    if (this.persist) {
-      this.saved$.next(false);
-      this.saving$.next(false);
-    }
+    this.next(this._loaded$, false);
+    this.next(this._loading$, false);
+    this.next(this._saved$, false);
+    this.next(this._saving$, false);
   }
 
   private generateErrorMessage(error: any, value?: T): string {
