@@ -68,8 +68,8 @@ The get method can take in an object with the interface
 export interface RxCacheItemConfig<T> {
   id: string; // A unique string that is used to identify and retrive the item from the cache
   construct?: () => Observable<T>; // An optional constructor function that returns an observable of your type
-  persist?: (val: T) => Observable<any>; // An optional save function that persists the current instance
-  saved?: (val: any) => void; // An optional save callback function that is called after the persist method succeeds
+  save?: (val: T) => Observable<any>; // An optional save function that saves the current instance
+  saved?: (val: any) => void; // An optional save callback function that is called after the save method succeeds
   stringify?: (val: T) => any; // An optional function to transform the value before it is stringified for storage
   parse?: (val: any) => T; // An optional function to transform the value after it is parse from storage
   load?: boolean; // An optional flag to call the constructor function as soon as the item is created
