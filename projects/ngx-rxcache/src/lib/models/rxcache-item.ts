@@ -68,6 +68,7 @@ export class RxCacheItem<T> {
 
     if (config.construct) {
       this.unsubscribe();
+      this.next(this._loading$, false);
     }
     if (config.load) {
       this.load();
