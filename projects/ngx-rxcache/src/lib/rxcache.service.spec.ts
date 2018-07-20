@@ -1,5 +1,5 @@
 import { TestBed, inject } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
 import { RxCacheService } from './rxcache.service';
@@ -29,7 +29,7 @@ describe('RxCacheService', () => {
       id: 'test',
       initialValue: 10
     });
-    expect(cacheItem.value$.getValue()).toEqual(10);
+    expect(cacheItem.value).toEqual(10);
   }));
 
   it('clone$ should copy property', inject([RxCacheService], (service: RxCacheService) => {
@@ -39,9 +39,11 @@ describe('RxCacheService', () => {
       initialValue: obj
     });
     let clone;
-    const subscription = cacheItem.clone$.subscribe(item => { clone = item; });
+    const subscription = cacheItem.clone$.subscribe(item => {
+      clone = item;
+    });
     subscription.unsubscribe();
-    expect(cacheItem.value$.getValue().prop1 === clone.prop1).toBeTruthy();
+    expect(cacheItem.value.prop1).toEqual(clone.prop1);
   }));
 
   it('clone should not be the same instance', inject([RxCacheService], (service: RxCacheService) => {
@@ -51,9 +53,11 @@ describe('RxCacheService', () => {
       initialValue: obj
     });
     let clone;
-    const subscription = cacheItem.clone$.subscribe(item => { clone = item; });
+    const subscription = cacheItem.clone$.subscribe(item => {
+      clone = item;
+    });
     subscription.unsubscribe();
-    expect(cacheItem.value$.getValue() === clone).toBeFalsy();
+    expect(cacheItem.value === clone).toBeFalsy();
   }));
 
   it('deleted item should not exist', inject([RxCacheService], (service: RxCacheService) => {
@@ -70,7 +74,7 @@ describe('RxCacheService', () => {
       autoload: true,
       construct: () => of(10)
     });
-    expect(cacheItem.value$.getValue()).toEqual(10);
+    expect(cacheItem.value).toEqual(10);
   }));
 
   it('should update item', inject([RxCacheService], (service: RxCacheService) => {
@@ -78,7 +82,7 @@ describe('RxCacheService', () => {
       id: 'test'
     });
     cacheItem.update(10);
-    expect(cacheItem.value$.getValue()).toEqual(10);
+    expect(cacheItem.value).toEqual(10);
   }));
 
   it(`shouldn't be loaded`, inject([RxCacheService], (service: RxCacheService) => {
@@ -86,7 +90,7 @@ describe('RxCacheService', () => {
       id: 'test',
       construct: () => of(10)
     });
-    expect(cacheItem.loaded$.getValue()).toBeFalsy();
+    expect(cacheItem.loaded).toBeFalsy();
   }));
 
   it('should load item', inject([RxCacheService], (service: RxCacheService) => {
@@ -95,7 +99,7 @@ describe('RxCacheService', () => {
       construct: () => of(10)
     });
     cacheItem.load();
-    expect(cacheItem.value$.getValue()).toEqual(10);
+    expect(cacheItem.value).toEqual(10);
   }));
 
   it('should be loaded', inject([RxCacheService], (service: RxCacheService) => {
@@ -104,7 +108,7 @@ describe('RxCacheService', () => {
       construct: () => of(10)
     });
     cacheItem.load();
-    expect(cacheItem.loaded$.getValue()).toBeTruthy();
+    expect(cacheItem.loaded).toBeTruthy();
   }));
 
   it('should be loading for 5ms', inject([RxCacheService], (service: RxCacheService) => {
@@ -113,7 +117,7 @@ describe('RxCacheService', () => {
       load: true,
       construct: () => of(10).pipe(delay(5))
     });
-    expect(cacheItem.loading$.getValue()).toBeTruthy();
+    expect(cacheItem.loading).toBeTruthy();
   }));
 
   it('should be not be loaded for 5ms', inject([RxCacheService], (service: RxCacheService) => {
@@ -122,7 +126,7 @@ describe('RxCacheService', () => {
       load: true,
       construct: () => of(10).pipe(delay(5))
     });
-    expect(cacheItem.loaded$.getValue()).toBeFalsy();
+    expect(cacheItem.loaded).toBeFalsy();
   }));
 
   it('should not be loading after 5ms', inject([RxCacheService], (service: RxCacheService) => {
@@ -132,7 +136,7 @@ describe('RxCacheService', () => {
       construct: () => of(10).pipe(delay(5))
     });
     setTimeout(() => {
-      expect(cacheItem.loading$.getValue()).toBeFalsy();
+      expect(cacheItem.loading).toBeFalsy();
     }, 6);
   }));
 
@@ -143,7 +147,7 @@ describe('RxCacheService', () => {
       construct: () => of(10).pipe(delay(5))
     });
     setTimeout(() => {
-      expect(cacheItem.loaded$.getValue()).toBeTruthy();
+      expect(cacheItem.loaded).toBeTruthy();
     }, 6);
   }));
 
@@ -155,47 +159,47 @@ describe('RxCacheService', () => {
     });
     cacheItem.update(5);
     setTimeout(() => {
-      expect(cacheItem.value$.getValue()).toEqual(5);
+      expect(cacheItem.value).toEqual(5);
     }, 6);
   }));
 
   it('should be saving for 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
-      save: (val) => of(val).pipe(delay(5))
+      save: val => of(val).pipe(delay(5))
     });
     cacheItem.save();
-    expect(cacheItem.saving$.getValue()).toBeTruthy();
+    expect(cacheItem.saving).toBeTruthy();
   }));
 
   it('should be not be saved for 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
-      save: (val) => of(val).pipe(delay(5))
+      save: val => of(val).pipe(delay(5))
     });
     cacheItem.save();
-    expect(cacheItem.saved$.getValue()).toBeFalsy();
+    expect(cacheItem.saved).toBeFalsy();
   }));
 
   it('should not be saving after 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
-      save: (val) => of(val).pipe(delay(5))
+      save: val => of(val).pipe(delay(5))
     });
     cacheItem.save();
     setTimeout(() => {
-      expect(cacheItem.saving$.getValue()).toBeFalsy();
+      expect(cacheItem.saving).toBeFalsy();
     }, 6);
   }));
 
   it('should be saved after 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
-      save: (val) => of(val).pipe(delay(5))
+      save: val => of(val).pipe(delay(5))
     });
     cacheItem.save();
     setTimeout(() => {
-      expect(cacheItem.saved$.getValue()).toBeTruthy();
+      expect(cacheItem.saved).toBeTruthy();
     }, 6);
   }));
 
@@ -204,8 +208,10 @@ describe('RxCacheService', () => {
     const cacheItem = service.get({
       id: 'test',
       initialValue: 10,
-      save: (val) => of(val),
-      saved: (val) => { test = val; }
+      save: val => of(val),
+      saved: val => {
+        test = val;
+      }
     });
     cacheItem.save();
     expect(test).toEqual(10);
@@ -216,9 +222,11 @@ describe('RxCacheService', () => {
     const cacheItem = service.get({
       id: 'test',
       initialValue: 10,
-      save: (val) => of(val)
+      save: val => of(val)
     });
-    cacheItem.save((val) => { test = val; });
+    cacheItem.save(val => {
+      test = val;
+    });
     expect(test).toEqual(10);
   }));
 
@@ -226,7 +234,10 @@ describe('RxCacheService', () => {
     let test;
     const cacheItem = service.get({
       id: 'test',
-      save: (val) => { test = val; return of('Ok'); }
+      save: val => {
+        test = val;
+        return of('Ok');
+      }
     });
     cacheItem.save(10);
     expect(test).toEqual(10);
@@ -237,9 +248,14 @@ describe('RxCacheService', () => {
     let message;
     const cacheItem = service.get({
       id: 'test',
-      save: (val) => { test = val; return of('Ok'); }
+      save: val => {
+        test = val;
+        return of('Ok');
+      }
     });
-    cacheItem.save(10, (response, value) => { message = `Server responded with ${response} and value was ${value}`; });
+    cacheItem.save(10, (response, value) => {
+      message = `Server responded with ${response} and value was ${value}`;
+    });
     expect(message).toEqual('Server responded with Ok and value was 10');
   }));
 
@@ -248,7 +264,7 @@ describe('RxCacheService', () => {
       id: 'test'
     });
     cacheItem.load(() => of(10));
-    expect(cacheItem.value$.getValue()).toEqual(10);
+    expect(cacheItem.value).toEqual(10);
   }));
 
   it('should error with generic error message', inject([RxCacheService], (service: RxCacheService) => {
@@ -257,7 +273,7 @@ describe('RxCacheService', () => {
       load: true,
       construct: () => throwError('Fail')
     });
-    expect(cacheItem.error$.getValue()).toEqual('An error has occoured');
+    expect(cacheItem.error).toEqual('An error has occoured');
   }));
 
   it('should error with generic custom message', inject([RxCacheService], (service: RxCacheService) => {
@@ -267,7 +283,7 @@ describe('RxCacheService', () => {
       genericError: 'I failed',
       construct: () => throwError('Fail')
     });
-    expect(cacheItem.error$.getValue()).toEqual('I failed');
+    expect(cacheItem.error).toEqual('I failed');
   }));
 
   it('should error with error handler', inject([RxCacheService], (service: RxCacheService) => {
@@ -277,18 +293,20 @@ describe('RxCacheService', () => {
       errorHandler: (error: any) => `${error}`,
       construct: () => throwError('Fail')
     });
-    expect(cacheItem.error$.getValue()).toEqual('Fail');
+    expect(cacheItem.error).toEqual('Fail');
   }));
 
   it('should error with global error handler', inject([RxCacheService], (service: RxCacheService) => {
-    service.errorHandler((id, error, value) => `Item with id: '${id}' caused error: '${error}' and had value '${value}'`);
+    service.errorHandler(
+      (id, error, value) => `Item with id: '${id}' caused error: '${error}' and had value '${value}'`
+    );
     const cacheItem = service.get({
       id: 'test',
       load: true,
       construct: () => throwError('Fail')
     });
     service.errorHandler(undefined);
-    expect(cacheItem.error$.getValue()).toEqual(`Item with id: 'test' caused error: 'Fail' and had value 'undefined'`);
+    expect(cacheItem.error).toEqual(`Item with id: 'test' caused error: 'Fail' and had value 'undefined'`);
   }));
 
   it('should get value from localStorage', inject([RxCacheService], (service: RxCacheService) => {
@@ -298,7 +316,7 @@ describe('RxCacheService', () => {
       id: id
     });
     localStorage.removeItem(id);
-    expect(cacheItem.value$.getValue()).toEqual(10);
+    expect(cacheItem.value).toEqual(10);
   }));
 
   it('should save value to localStorage', inject([RxCacheService], (service: RxCacheService) => {
@@ -320,10 +338,10 @@ describe('RxCacheService', () => {
     const cacheItem = service.get({
       id: id,
       localStorage: true,
-      parse: (val) => new Date(val)
+      parse: val => new Date(val)
     });
     localStorage.removeItem(id);
-    expect(cacheItem.value$.getValue().getTime()).toEqual(date.getTime());
+    expect(cacheItem.value.getTime()).toEqual(date.getTime());
   }));
 
   it('should stringify localStorage item', inject([RxCacheService], (service: RxCacheService) => {
@@ -347,7 +365,7 @@ describe('RxCacheService', () => {
       id: id
     });
     sessionStorage.removeItem(id);
-    expect(cacheItem.value$.getValue()).toEqual(10);
+    expect(cacheItem.value).toEqual(10);
   }));
 
   it('should save value to sessionStorage', inject([RxCacheService], (service: RxCacheService) => {
@@ -369,10 +387,10 @@ describe('RxCacheService', () => {
     const cacheItem = service.get({
       id: id,
       sessionStorage: true,
-      parse: (val) => new Date(val)
+      parse: val => new Date(val)
     });
     sessionStorage.removeItem(id);
-    expect(cacheItem.value$.getValue().getTime()).toEqual(date.getTime());
+    expect(cacheItem.value.getTime()).toEqual(date.getTime());
   }));
 
   it('should stringify sessionStorage item', inject([RxCacheService], (service: RxCacheService) => {
