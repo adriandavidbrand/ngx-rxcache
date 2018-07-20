@@ -3,7 +3,7 @@ import { takeUntil, map } from 'rxjs/operators';
 
 import { RxCacheItemConfig } from './rxcache-item-config';
 import { globalConfig } from './rxcache-global-config';
-import { clone } from '../clone';
+import { clone } from '@app/shared/functions/clone';
 
 export class RxCacheItem<T> {
   constructor(config: RxCacheItemConfig<T>) {
@@ -36,11 +36,13 @@ export class RxCacheItem<T> {
   private localStorage?: boolean;
   private sessionStorage?: boolean;
   private genericError: string;
+  private lastRefreshed: Date;
+  private expires?: number;
 
   private construct?: () => Observable<T>;
   private _save?: (value: T) => Observable<any>;
 
-  private saved?: (response: any, val?: T) => void;
+  private _saved?: (response: any, val?: T) => void;
   private errorHandler?: (error: any, value?: T) => string | void;
 
   private stringify?: (value: T) => any;
@@ -58,35 +60,52 @@ export class RxCacheItem<T> {
     this.localStorage = config.localStorage || this.localStorage;
     this.sessionStorage = config.sessionStorage || this.sessionStorage;
     this.genericError = config.genericError || this.genericError;
+    this.expires = config.expires || this.expires;
 
     this.construct = config.construct || this.construct;
     this._save = config.save || this._save;
-    this.saved = config.saved || this.saved;
+    this._saved = config.saved || this._saved;
     this.errorHandler = config.errorHandler || this.errorHandler;
     this.stringify = config.stringify || this.stringify;
     this.parse = config.parse || this.parse;
 
     if (config.construct) {
       this.unsubscribe();
-      this.next(this._loading$, false);
     }
     if (config.load) {
       this.load();
     }
   }
 
+  get expired(): boolean {
+    return (
+      this.expires &&
+      this.lastRefreshed &&
+      this.lastRefreshed.getTime() < new Date().getTime() - this.expires * 60 * 1000
+    );
+  }
+
   private instance$: BehaviorSubject<T>;
-  get value$(): BehaviorSubject<T> {
+  get value$(): Observable<T> {
+    this.tryAutoload();
+    return this.instance$.pipe(map(instance => (this.expired ? undefined : instance)));
+  }
+
+  get value(): T {
+    this.tryAutoload();
+    return this.expired ? undefined : this.instance$.getValue();
+  }
+
+  private tryAutoload() {
     if (
       this.autoload &&
       this.construct &&
       typeof this.instance$.getValue() === 'undefined' &&
-      !this.loaded$.getValue() &&
-      !this.loading$.getValue()
+      !this.loaded &&
+      !this.loading
     ) {
       this.load();
     }
-    return this.instance$;
   }
 
   private _clone$: Observable<T>;
@@ -97,52 +116,110 @@ export class RxCacheItem<T> {
     return this._clone$;
   }
 
+  get clone(): T {
+    return clone(this.value);
+  }
+
   private _loaded$: BehaviorSubject<boolean>;
-  get loaded$(): BehaviorSubject<boolean> {
+  get loaded$(): Observable<boolean> {
+    this.createLoaded();
+    return this._loaded$.pipe(map(loaded => (this.expired ? false : loaded)));
+  }
+
+  get loaded(): boolean {
+    this.createLoaded();
+    return this.expired ? false : this._loaded$.getValue();
+  }
+
+  private createLoaded() {
     if (!this._loaded$) {
       this._loaded$ = new BehaviorSubject<boolean>(typeof this.instance$.getValue() !== 'undefined');
     }
-    return this._loaded$;
   }
 
   private _loading$: BehaviorSubject<boolean>;
-  get loading$(): BehaviorSubject<boolean> {
-    if (!this._loading$) {
-      this._loading$ = new BehaviorSubject<boolean>(false);
-    }
+  get loading$(): Observable<boolean> {
+    this.createLoading();
     return this._loading$;
   }
 
-  private _saving$: BehaviorSubject<boolean>;
-  get saving$(): BehaviorSubject<boolean> {
-    if (!this._saving$) {
-      this._saving$ = new BehaviorSubject<boolean>(false);
+  get loading(): boolean {
+    this.createLoading();
+    return this._loading$.getValue();
+  }
+
+  private createLoading() {
+    if (!this._loading$) {
+      this._loading$ = new BehaviorSubject<boolean>(false);
     }
+  }
+
+  private _saving$: BehaviorSubject<boolean>;
+  get saving$(): Observable<boolean> {
+    this.createSaving();
     return this._saving$;
   }
 
-  private _saved$: BehaviorSubject<boolean>;
-  get saved$(): BehaviorSubject<boolean> {
-    if (!this._saved$) {
-      this._saved$ = new BehaviorSubject<boolean>(false);
+  get saving(): boolean {
+    this.createSaving();
+    return this._saving$.getValue();
+  }
+
+  private createSaving() {
+    if (!this._saving$) {
+      this._saving$ = new BehaviorSubject<boolean>(false);
     }
+  }
+
+  private _saved$: BehaviorSubject<boolean>;
+  get saved$(): Observable<boolean> {
+    this.createSaved();
     return this._saved$;
   }
 
-  private _hasError$: BehaviorSubject<boolean>;
-  get hasError$(): BehaviorSubject<boolean> {
-    if (!this._hasError$) {
-      this._hasError$ = new BehaviorSubject<boolean>(false);
+  get saved(): boolean {
+    this.createSaved();
+    return this._saved$.getValue();
+  }
+
+  private createSaved() {
+    if (!this._saved$) {
+      this._saved$ = new BehaviorSubject<boolean>(false);
     }
+  }
+
+  private _hasError$: BehaviorSubject<boolean>;
+  get hasError$(): Observable<boolean> {
+    this.createHasError();
     return this._hasError$;
   }
 
+  get hasError(): boolean {
+    this.createHasError();
+    return this._hasError$.getValue();
+  }
+
+  private createHasError() {
+    if (!this._hasError$) {
+      this._hasError$ = new BehaviorSubject<boolean>(false);
+    }
+  }
+
   private _error$: BehaviorSubject<string>;
-  get error$(): BehaviorSubject<string> {
+  get error$(): Observable<string> {
+    this.createError();
+    return this._error$;
+  }
+
+  get error(): string {
+    this.createError();
+    return this._error$.getValue();
+  }
+
+  private createError() {
     if (!this._error$) {
       this._error$ = new BehaviorSubject<string>(undefined);
     }
-    return this._error$;
   }
 
   private next<T>(bs: BehaviorSubject<T>, value: T) {
@@ -159,6 +236,7 @@ export class RxCacheItem<T> {
       sessionStorage.setItem(this.id, this.stringify ? JSON.stringify(this.stringify(value)) : JSON.stringify(value));
     }
     this.instance$.next(value);
+    this.lastRefreshed = new Date();
   }
 
   update(value: T) {
@@ -185,10 +263,18 @@ export class RxCacheItem<T> {
       ? (valueOrSaved as (response: any, value?: any) => void)
       : savedOrUndefined;
     if (this._save) {
-      this.saving$.next(true);
-      this.saved$.next(false);
-      this.next(this.hasError$, false);
-      this.next(this.error$, undefined);
+      if (this._saving$) {
+        this._saving$.next(true);
+      } else {
+        this._saving$ = new BehaviorSubject<boolean>(true);
+      }
+      if (this._saved$) {
+        this._saved$.next(false);
+      } else {
+        this._saved$ = new BehaviorSubject<boolean>(false);
+      }
+      this.next(this._hasError$, false);
+      this.next(this._error$, undefined);
       const finalise = new Subject<boolean>();
       this._save(value)
         .pipe(takeUntil(finalise))
@@ -197,8 +283,8 @@ export class RxCacheItem<T> {
             if (saved) {
               saved(response, value);
             }
-            if (this.saved) {
-              this.saved(response, value);
+            if (this._saved) {
+              this._saved(response, value);
             }
             this._saved$.next(true);
             this._saving$.next(false);
@@ -217,10 +303,18 @@ export class RxCacheItem<T> {
       this.construct = construct;
     }
     if (this.construct) {
-      this.loading$.next(true);
-      this.loaded$.next(false);
-      this.next(this.hasError$, false);
-      this.next(this.error$, undefined);
+      if (this._loading$) {
+        this._loading$.next(true);
+      } else {
+        this._loading$ = new BehaviorSubject<boolean>(true);
+      }
+      if (this._loaded$) {
+        this._loaded$.next(false);
+      } else {
+        this._loaded$ = new BehaviorSubject<boolean>(false);
+      }
+      this.next(this._hasError$, false);
+      this.next(this._error$, undefined);
       this.unsubscribe();
       this.subscription = this.construct().subscribe(
         item => {
@@ -270,13 +364,20 @@ export class RxCacheItem<T> {
     const globalConfigError = globalConfig.errorHandler
       ? globalConfig.errorHandler(this.id, error, value)
       : globalConfig.genericError;
-    this.error$.next(
+    const errorMsg =
       (this.errorHandler ? this.generateErrorMessage(error, value) : this.genericError) ||
-        globalConfigError ||
-        globalConfig.genericError
-    );
-    this.hasError$.next(true);
-    this.hasError$.next(true);
+      globalConfigError ||
+      globalConfig.genericError;
+    if (this._error$) {
+      this._error$.next(errorMsg);
+    } else {
+      this._error$ = new BehaviorSubject<string>(errorMsg);
+    }
+    if (this._hasError$) {
+      this._hasError$.next(true);
+    } else {
+      this._hasError$ = new BehaviorSubject<boolean>(true);
+    }
     this.next(this._loaded$, false);
     this.next(this._loading$, false);
     this.next(this._saved$, false);
