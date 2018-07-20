@@ -11,12 +11,14 @@ export class RxCacheService {
   get<T>(id: string): RxCacheItem<T>;
   get<T>(config: RxCacheItemConfig<T>): RxCacheItem<T>;
   get<T>(idOrConfig: string | RxCacheItemConfig<T>): RxCacheItem<T> {
-    const paramIsString = typeof idOrConfig === "string";
-    const config: RxCacheItemConfig<T> = paramIsString ? { id: idOrConfig as string } : idOrConfig as RxCacheItemConfig<T>;
+    const paramIsString = typeof idOrConfig === 'string';
+    const config: RxCacheItemConfig<T> = paramIsString
+      ? { id: idOrConfig as string }
+      : (idOrConfig as RxCacheItemConfig<T>);
     let cacheItem = this.cacheItems.find(i => i.id === config.id);
     if (!cacheItem) {
       cacheItem = new RxCacheItem<T>(config);
-      this.cacheItems = [ ...this.cacheItems, cacheItem ];
+      this.cacheItems = [...this.cacheItems, cacheItem];
     } else if (!paramIsString) {
       cacheItem.configure(config);
     }
@@ -36,6 +38,13 @@ export class RxCacheService {
       cacheItem.finish();
       this.cacheItems = this.cacheItems.filter(item => item.id !== id);
     }
+  }
+
+  clear() {
+    this.cacheItems = this.cacheItems.reduce((items, item) => {
+      item.finish();
+      return items;
+    }, []);
   }
 
   genericError(genericError: string) {
