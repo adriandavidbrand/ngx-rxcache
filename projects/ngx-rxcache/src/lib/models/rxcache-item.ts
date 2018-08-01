@@ -287,7 +287,7 @@ export class RxCacheItem<T> {
 
   save();
   save(value: T);
-  save(saved: (value: any) => void);
+  save(saved: (response: any, value?: any) => void);
   save(value: T, saved: (response: any, value?: any) => void);
   save(
     valueOrSaved?: T | ((response: any, value?: any) => void),
@@ -338,7 +338,7 @@ export class RxCacheItem<T> {
   delete();
   delete(value: T);
   delete(deleted: (response: any, value?: any) => void);
-  delete(value: T, deleted: (response: any, value: any) => void);
+  delete(value: T, deleted: (response: any, value?: any) => void);
   delete(
     valueOrDeleted?: T | ((response: any, value?: any) => void),
     deletedOrUndefined?: (response: any, value?: any) => void
