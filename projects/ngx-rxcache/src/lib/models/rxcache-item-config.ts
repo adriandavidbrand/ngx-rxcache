@@ -5,6 +5,8 @@ export interface RxCacheItemConfig<T> {
   construct?: () => Observable<T>;
   save?: (value: T) => Observable<any>;
   saved?: (response: any, value?: T) => void;
+  delete?: (value: T) => Observable<any>;
+  deleted?: (response: any, value?: T) => void;
   stringify?: (value: T) => any;
   parse?: (value: any) => T;
   expires?: number;
