@@ -1,5 +1,5 @@
 import { TestBed, inject } from '@angular/core/testing';
-import { Observable, of, throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
 import { RxCacheService } from './rxcache.service';
@@ -230,7 +230,7 @@ describe('RxCacheService', () => {
     expect(test).toEqual(10);
   }));
 
-  it('should save non updated value', inject([RxCacheService], (service: RxCacheService) => {
+  it('should run save', inject([RxCacheService], (service: RxCacheService) => {
     let test;
     const cacheItem = service.get({
       id: 'test',
@@ -243,7 +243,7 @@ describe('RxCacheService', () => {
     expect(test).toEqual(10);
   }));
 
-  it('should save non updated value and run callback function', inject([RxCacheService], (service: RxCacheService) => {
+  it('should run save and callback function', inject([RxCacheService], (service: RxCacheService) => {
     let test;
     let message;
     const cacheItem = service.get({
@@ -254,6 +254,102 @@ describe('RxCacheService', () => {
       }
     });
     cacheItem.save(10, (response, value) => {
+      message = `Server responded with ${response} and value was ${value}`;
+    });
+    expect(message).toEqual('Server responded with Ok and value was 10');
+  }));
+
+  it('should be deleting for 5ms', inject([RxCacheService], (service: RxCacheService) => {
+    const cacheItem = service.get({
+      id: 'test',
+      delete: val => of(val).pipe(delay(5))
+    });
+    cacheItem.delete();
+    expect(cacheItem.deleting).toBeTruthy();
+  }));
+
+  it('should be not be deleted for 5ms', inject([RxCacheService], (service: RxCacheService) => {
+    const cacheItem = service.get({
+      id: 'test',
+      delete: val => of(val).pipe(delay(5))
+    });
+    cacheItem.delete();
+    expect(cacheItem.deleted).toBeFalsy();
+  }));
+
+  it('should not be deleting after 5ms', inject([RxCacheService], (service: RxCacheService) => {
+    const cacheItem = service.get({
+      id: 'test',
+      delete: val => of(val).pipe(delay(5))
+    });
+    cacheItem.delete();
+    setTimeout(() => {
+      expect(cacheItem.deleting).toBeFalsy();
+    }, 6);
+  }));
+
+  it('should be deleted after 5ms', inject([RxCacheService], (service: RxCacheService) => {
+    const cacheItem = service.get({
+      id: 'test',
+      delete: val => of(val).pipe(delay(5))
+    });
+    cacheItem.delete();
+    setTimeout(() => {
+      expect(cacheItem.deleted).toBeTruthy();
+    }, 6);
+  }));
+
+  it('should run deleted', inject([RxCacheService], (service: RxCacheService) => {
+    let test;
+    const cacheItem = service.get({
+      id: 'test',
+      initialValue: 10,
+      delete: val => of(val),
+      deleted: (response, val) => {
+        test = val;
+      }
+    });
+    cacheItem.delete();
+    expect(test).toEqual(10);
+  }));
+
+  it('should run custom deleted', inject([RxCacheService], (service: RxCacheService) => {
+    let test;
+    const cacheItem = service.get({
+      id: 'test',
+      initialValue: 10,
+      delete: val => of(val)
+    });
+    cacheItem.delete((response, val) => {
+      test = val;
+    });
+    expect(test).toEqual(10);
+  }));
+
+  it('should run delete', inject([RxCacheService], (service: RxCacheService) => {
+    let test;
+    const cacheItem = service.get({
+      id: 'test',
+      delete: val => {
+        test = val;
+        return of('Ok');
+      }
+    });
+    cacheItem.delete(10);
+    expect(test).toEqual(10);
+  }));
+
+  it('should run delete and callback function', inject([RxCacheService], (service: RxCacheService) => {
+    let test;
+    let message;
+    const cacheItem = service.get({
+      id: 'test',
+      delete: val => {
+        test = val;
+        return of('Ok');
+      }
+    });
+    cacheItem.delete(10, (response, value) => {
       message = `Server responded with ${response} and value was ${value}`;
     });
     expect(message).toEqual('Server responded with Ok and value was 10');
@@ -405,5 +501,25 @@ describe('RxCacheService', () => {
     const sessionStorageItem = sessionStorage.getItem(id);
     sessionStorage.removeItem(id);
     expect(sessionStorageItem).toEqual(JSON.stringify(date.getTime()));
+  }));
+
+  it('should not be expired', inject([RxCacheService], (service: RxCacheService) => {
+    const cacheItem = service.get({
+      id: 'test',
+      initialValue: 10,
+      expires: 5 / 60000 //5ms in minutes
+    });
+    expect(cacheItem.value).toEqual(10);
+  }));
+
+  it('should be expired after 5ms', inject([RxCacheService], (service: RxCacheService) => {
+    const cacheItem = service.get({
+      id: 'test',
+      initialValue: 10,
+      expires: 5 / 60000 //5ms in minutes
+    });
+    setTimeout(() => {
+      expect(cacheItem.value).toBeUndefined();
+    }, 6);
   }));
 });
