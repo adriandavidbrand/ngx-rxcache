@@ -41,8 +41,9 @@ export class RxCacheItem<T> {
 
   private construct?: () => Observable<T>;
   private _save?: (value: T) => Observable<any>;
-
   private _saved?: (response: any, val?: T) => void;
+  private _delete?: (value: T) => Observable<any>;
+  private _deleted?: (response: any, val?: T) => void;
   private errorHandler?: (error: any, value?: T) => string | void;
 
   private stringify?: (value: T) => any;
@@ -65,6 +66,8 @@ export class RxCacheItem<T> {
     this.construct = config.construct || this.construct;
     this._save = config.save || this._save;
     this._saved = config.saved || this._saved;
+    this._delete = config.delete || this._delete;
+    this._deleted = config.deleted || this._deleted;
     this.errorHandler = config.errorHandler || this.errorHandler;
     this.stringify = config.stringify || this.stringify;
     this.parse = config.parse || this.parse;
@@ -188,6 +191,40 @@ export class RxCacheItem<T> {
     }
   }
 
+  private _deleting$: BehaviorSubject<boolean>;
+  get deleting$(): Observable<boolean> {
+    this.createDeleting();
+    return this._deleting$;
+  }
+
+  get deleting(): boolean {
+    this.createDeleting();
+    return this._deleting$.getValue();
+  }
+
+  private createDeleting() {
+    if (!this._deleting$) {
+      this._deleting$ = new BehaviorSubject<boolean>(false);
+    }
+  }
+
+  private _deleted$: BehaviorSubject<boolean>;
+  get deleted$(): Observable<boolean> {
+    this.createDeleted();
+    return this._deleted$;
+  }
+
+  get deleted(): boolean {
+    this.createDeleted();
+    return this._deleted$.getValue();
+  }
+
+  private createDeleted() {
+    if (!this._deleted$) {
+      this._deleted$ = new BehaviorSubject<boolean>(false);
+    }
+  }
+
   private _hasError$: BehaviorSubject<boolean>;
   get hasError$(): Observable<boolean> {
     this.createHasError();
@@ -251,7 +288,7 @@ export class RxCacheItem<T> {
   save();
   save(value: T);
   save(saved: (value: any) => void);
-  save(value: T, saved: (response: any, value: any) => void);
+  save(value: T, saved: (response: any, value?: any) => void);
   save(
     valueOrSaved?: T | ((response: any, value?: any) => void),
     savedOrUndefined?: (response: any, value?: any) => void
@@ -288,6 +325,58 @@ export class RxCacheItem<T> {
             }
             this._saved$.next(true);
             this._saving$.next(false);
+            finalise.next(true);
+          },
+          error => {
+            this.runErrorHandler(error, value);
+            finalise.next(true);
+          }
+        );
+    }
+  }
+
+  delete();
+  delete(value: T);
+  delete(deleted: (response: any, value?: any) => void);
+  delete(value: T, deleted: (response: any, value: any) => void);
+  delete(
+    valueOrDeleted?: T | ((response: any, value?: any) => void),
+    deletedOrUndefined?: (response: any, value?: any) => void
+  ) {
+    const valueOrDeletedIsFunction = typeof valueOrDeleted === 'function';
+    const value: T =
+      valueOrDeletedIsFunction || typeof valueOrDeleted === 'undefined'
+        ? this.instance$.getValue()
+        : (valueOrDeleted as T);
+    const deleted: (response: any, value?: any) => void = valueOrDeletedIsFunction
+      ? (valueOrDeleted as (response: any, value?: any) => void)
+      : deletedOrUndefined;
+    if (this._delete) {
+      if (this._deleting$) {
+        this._deleting$.next(true);
+      } else {
+        this._deleting$ = new BehaviorSubject<boolean>(true);
+      }
+      if (this._deleted$) {
+        this._deleted$.next(false);
+      } else {
+        this._deleted$ = new BehaviorSubject<boolean>(false);
+      }
+      this.next(this._hasError$, false);
+      this.next(this._error$, undefined);
+      const finalise = new Subject<boolean>();
+      this._delete(value)
+        .pipe(takeUntil(finalise))
+        .subscribe(
+          response => {
+            if (deleted) {
+              deleted(response, value);
+            }
+            if (this._deleted) {
+              this._deleted(response, value);
+            }
+            this._deleted$.next(true);
+            this._deleting$.next(false);
             finalise.next(true);
           },
           error => {
@@ -349,6 +438,10 @@ export class RxCacheItem<T> {
     this.instance$.complete();
     this.complete(this._loading$);
     this.complete(this._loaded$);
+    this.complete(this._saving$);
+    this.complete(this._saved$);
+    this.complete(this._deleting$);
+    this.complete(this._deleted$);
     this.complete(this._error$);
     this.complete(this._hasError$);
     this.unsubscribe();
@@ -361,12 +454,10 @@ export class RxCacheItem<T> {
   }
 
   private runErrorHandler(error: any, value?: T) {
-    const globalConfigError = globalConfig.errorHandler
-      ? globalConfig.errorHandler(this.id, error, value)
-      : globalConfig.genericError;
     const errorMsg =
-      (this.errorHandler ? this.generateErrorMessage(error, value) : this.genericError) ||
-      globalConfigError ||
+      (this.errorHandler ? this.errorHandler(error, value) : this.genericError) ||
+      (globalConfig.errorHandler ? globalConfig.errorHandler(this.id, error, value) : globalConfig.genericError) ||
+      this.genericError ||
       globalConfig.genericError;
     if (this._error$) {
       this._error$.next(errorMsg);
@@ -382,9 +473,7 @@ export class RxCacheItem<T> {
     this.next(this._loading$, false);
     this.next(this._saved$, false);
     this.next(this._saving$, false);
-  }
-
-  private generateErrorMessage(error: any, value?: T): string {
-    return this.errorHandler(error, value) || this.genericError || globalConfig.genericError;
+    this.next(this._deleting$, false);
+    this.next(this._deleted$, false);
   }
 }
