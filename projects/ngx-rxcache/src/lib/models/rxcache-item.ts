@@ -27,6 +27,7 @@ export class RxCacheItem<T> {
             : JSON.parse(sessionStorageItem)
           : config.initialValue
     );
+    this.lastRefreshed = new Date();
     this.configure(config);
   }
 
