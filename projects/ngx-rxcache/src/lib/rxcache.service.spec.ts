@@ -32,6 +32,26 @@ describe('RxCacheService', () => {
     expect(cacheItem.value).toEqual(10);
   }));
 
+  it('should not be expired', inject([RxCacheService], (service: RxCacheService) => {
+    const cacheItem = service.get({
+      id: 'test',
+      initialValue: 10,
+      expires: 5 / 60000 //5ms in minutes
+    });
+    expect(cacheItem.value).toEqual(10);
+  }));
+
+  it('should be expired after 5ms', inject([RxCacheService], (service: RxCacheService) => {
+    const cacheItem = service.get({
+      id: 'expiry',
+      initialValue: 10,
+      expires: 5 / 60000 //5ms in minutes
+    });
+    setTimeout(() => {
+      expect(cacheItem.value).toBeUndefined();
+    }, 6);
+  }));
+
   it('clone$ should copy property', inject([RxCacheService], (service: RxCacheService) => {
     const obj = { prop1: 'prop1' };
     const cacheItem = service.get({
@@ -501,25 +521,5 @@ describe('RxCacheService', () => {
     const sessionStorageItem = sessionStorage.getItem(id);
     sessionStorage.removeItem(id);
     expect(sessionStorageItem).toEqual(JSON.stringify(date.getTime()));
-  }));
-
-  it('should not be expired', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.get({
-      id: 'test',
-      initialValue: 10,
-      expires: 5 / 60000 //5ms in minutes
-    });
-    expect(cacheItem.value).toEqual(10);
-  }));
-
-  it('should be expired after 5ms', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.get({
-      id: 'test',
-      initialValue: 10,
-      expires: 5 / 60000 //5ms in minutes
-    });
-    setTimeout(() => {
-      expect(cacheItem.value).toBeUndefined();
-    }, 6);
   }));
 });
