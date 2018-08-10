@@ -3,7 +3,7 @@ import { takeUntil, map } from 'rxjs/operators';
 
 import { RxCacheItemConfig } from './rxcache-item-config';
 import { globalConfig } from './rxcache-global-config';
-import { clone } from '@app/shared/functions/clone';
+import { clone } from '../clone';
 
 export class RxCacheItem<T> {
   constructor(config: RxCacheItemConfig<T>) {
