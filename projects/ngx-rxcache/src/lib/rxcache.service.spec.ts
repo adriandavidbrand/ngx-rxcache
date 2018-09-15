@@ -1,6 +1,7 @@
 import { TestBed, inject } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
+import { fakeAsync, tick, discardPeriodicTasks } from '@angular/core/testing';
 
 import { RxCacheService } from './rxcache.service';
 
@@ -41,16 +42,16 @@ describe('RxCacheService', () => {
     expect(cacheItem.value).toEqual(10);
   }));
 
-  it('should be expired after 5ms', inject([RxCacheService], (service: RxCacheService) => {
+  it('should be expired after 5ms', inject([RxCacheService], fakeAsync((service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'expiry',
       initialValue: 10,
       expires: 5 / 60000 //5ms in minutes
     });
-    setTimeout(() => {
-      expect(cacheItem.value).toBeUndefined();
-    }, 6);
-  }));
+    tick(6);
+    expect(cacheItem.value).toBeUndefined();
+    discardPeriodicTasks();
+  })));
 
   it('clone$ should copy property', inject([RxCacheService], (service: RxCacheService) => {
     const obj = { prop1: 'prop1' };
@@ -149,39 +150,38 @@ describe('RxCacheService', () => {
     expect(cacheItem.loaded).toBeFalsy();
   }));
 
-  it('should not be loading after 5ms', inject([RxCacheService], (service: RxCacheService) => {
+  it('should not be loading after 5ms', inject([RxCacheService], fakeAsync((service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
       load: true,
       construct: () => of(10).pipe(delay(5))
     });
-    setTimeout(() => {
-      expect(cacheItem.loading).toBeFalsy();
-    }, 6);
-  }));
+    tick(6);
+    expect(cacheItem.loading).toBeFalsy();
+  })));
 
-  it('should be loaded after 5ms', inject([RxCacheService], (service: RxCacheService) => {
+  it('should be loaded after 5ms', inject([RxCacheService], fakeAsync((service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
       load: true,
       construct: () => of(10).pipe(delay(5))
     });
-    setTimeout(() => {
-      expect(cacheItem.loaded).toBeTruthy();
-    }, 6);
-  }));
+    tick(6);
+    expect(cacheItem.loaded).toBeTruthy();
+    discardPeriodicTasks();
+  })));
 
-  it('should unsubscribe from constructor on update', inject([RxCacheService], (service: RxCacheService) => {
+  it('should unsubscribe from constructor on update', inject([RxCacheService], fakeAsync((service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
       load: true,
       construct: () => of(10).pipe(delay(5))
     });
     cacheItem.update(5);
-    setTimeout(() => {
-      expect(cacheItem.value).toEqual(5);
-    }, 6);
-  }));
+    tick(6);
+    expect(cacheItem.value).toEqual(5);
+    discardPeriodicTasks();
+  })));
 
   it('should be saving for 5ms', inject([RxCacheService], (service: RxCacheService) => {
     const cacheItem = service.get({
@@ -201,27 +201,27 @@ describe('RxCacheService', () => {
     expect(cacheItem.saved).toBeFalsy();
   }));
 
-  it('should not be saving after 5ms', inject([RxCacheService], (service: RxCacheService) => {
+  it('should not be saving after 5ms', inject([RxCacheService], fakeAsync((service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
       save: val => of(val).pipe(delay(5))
     });
     cacheItem.save();
-    setTimeout(() => {
-      expect(cacheItem.saving).toBeFalsy();
-    }, 6);
-  }));
+    tick(6);
+    expect(cacheItem.saving).toBeFalsy();
+    discardPeriodicTasks();
+  })));
 
-  it('should be saved after 5ms', inject([RxCacheService], (service: RxCacheService) => {
+  it('should be saved after 5ms', inject([RxCacheService], fakeAsync((service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
       save: val => of(val).pipe(delay(5))
     });
     cacheItem.save();
-    setTimeout(() => {
-      expect(cacheItem.saved).toBeTruthy();
-    }, 6);
-  }));
+    tick(6);
+    expect(cacheItem.saved).toBeTruthy();
+    discardPeriodicTasks();
+  })));
 
   it('should run saved', inject([RxCacheService], (service: RxCacheService) => {
     let test;
@@ -297,27 +297,27 @@ describe('RxCacheService', () => {
     expect(cacheItem.deleted).toBeFalsy();
   }));
 
-  it('should not be deleting after 5ms', inject([RxCacheService], (service: RxCacheService) => {
+  it('should not be deleting after 5ms', inject([RxCacheService], fakeAsync((service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
       delete: val => of(val).pipe(delay(5))
     });
     cacheItem.delete();
-    setTimeout(() => {
-      expect(cacheItem.deleting).toBeFalsy();
-    }, 6);
-  }));
+    tick(6);
+    expect(cacheItem.deleting).toBeFalsy();
+    discardPeriodicTasks();
+  })));
 
-  it('should be deleted after 5ms', inject([RxCacheService], (service: RxCacheService) => {
+  it('should be deleted after 5ms', inject([RxCacheService], fakeAsync((service: RxCacheService) => {
     const cacheItem = service.get({
       id: 'test',
       delete: val => of(val).pipe(delay(5))
     });
     cacheItem.delete();
-    setTimeout(() => {
-      expect(cacheItem.deleted).toBeTruthy();
-    }, 6);
-  }));
+    tick(6);
+    expect(cacheItem.deleted).toBeTruthy();
+    discardPeriodicTasks();
+  })));
 
   it('should run deleted', inject([RxCacheService], (service: RxCacheService) => {
     let test;
