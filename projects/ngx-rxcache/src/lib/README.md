@@ -141,7 +141,7 @@ Some values such as dates do not persist well in sessionStorage and localStorage
 cache.get({
   id: 'key',
   stringify: (val) => ({ ...val, date: val.date.getTime() }),
-  parse: (val) => ({ ...val, date: new Date(val.date) })
+  parse: (val) => ({ ...val, date: new Date(JSON.parse(val.date)) })
 });
 ```
 Will transform the value's date property into number of milliseconds before it is stringified for storage and transform the date property back to a date object after it is parsed from storage.
