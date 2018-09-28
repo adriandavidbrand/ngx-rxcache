@@ -90,9 +90,10 @@ export class RxCacheItem<T> {
   }
 
   private instance$: BehaviorSubject<T>;
+  private instanceExpiredCheck$ = this.instance$.pipe(map(instance => (this.expired ? undefined : instance)));
   get value$(): Observable<T> {
     this.tryAutoload();
-    return this.instance$.pipe(map(instance => (this.expired ? undefined : instance)));
+    return this.instanceExpiredCheck$;
   }
 
   get value(): T {
@@ -125,9 +126,10 @@ export class RxCacheItem<T> {
   }
 
   private _loaded$: BehaviorSubject<boolean>;
+  private _loadedExpiredCheck$: Observable<boolean>;
   get loaded$(): Observable<boolean> {
     this.createLoaded();
-    return this._loaded$.pipe(map(loaded => (this.expired ? false : loaded)));
+    return this._loadedExpiredCheck$;
   }
 
   get loaded(): boolean {
@@ -138,6 +140,7 @@ export class RxCacheItem<T> {
   private createLoaded() {
     if (!this._loaded$) {
       this._loaded$ = new BehaviorSubject<boolean>(typeof this.instance$.getValue() !== 'undefined');
+      this._loadedExpiredCheck$ = this._loaded$.pipe(map(loaded => (this.expired ? false : loaded)));
     }
   }
 
