@@ -27,6 +27,7 @@ export class RxCacheItem<T> {
             : JSON.parse(sessionStorageItem)
           : config.initialValue
     );
+    this.instanceExpiredCheck$ = this.instance$.pipe(map(instance => (this.expired ? undefined : instance)));
     this.lastRefreshed = new Date();
     this.configure(config);
   }
@@ -90,7 +91,7 @@ export class RxCacheItem<T> {
   }
 
   private instance$: BehaviorSubject<T>;
-  private instanceExpiredCheck$ = this.instance$.pipe(map(instance => (this.expired ? undefined : instance)));
+  private instanceExpiredCheck$;
   get value$(): Observable<T> {
     this.tryAutoload();
     return this.instanceExpiredCheck$;
