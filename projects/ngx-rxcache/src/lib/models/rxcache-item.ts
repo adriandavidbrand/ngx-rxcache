@@ -91,7 +91,7 @@ export class RxCacheItem<T> {
   }
 
   private instance$: BehaviorSubject<T>;
-  private instanceExpiredCheck$;
+  private instanceExpiredCheck$: Observable<T>;
   get value$(): Observable<T> {
     this.tryAutoload();
     return this.instanceExpiredCheck$;
