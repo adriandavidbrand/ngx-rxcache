@@ -331,10 +331,12 @@ export class RxCacheItem<T> {
             this._saved$.next(true);
             this._saving$.next(false);
             finalise.next(true);
+            finalise.complete();
           },
           error => {
             this.runErrorHandler(error, value);
             finalise.next(true);
+            finalise.complete();
           }
         );
     }
@@ -383,10 +385,12 @@ export class RxCacheItem<T> {
             this._deleted$.next(true);
             this._deleting$.next(false);
             finalise.next(true);
+            finalise.complete();
           },
           error => {
             this.runErrorHandler(error, value);
             finalise.next(true);
+            finalise.complete();
           }
         );
     }
