@@ -461,8 +461,8 @@ export class RxCacheItem<T> {
   private runErrorHandler(error: any, value?: T) {
     const errorMsg =
       (this.errorHandler ? this.errorHandler(error, value) : this.genericError) ||
-      (globalConfig.errorHandler ? globalConfig.errorHandler(this.id, error, value) : globalConfig.genericError) ||
       this.genericError ||
+      (globalConfig.errorHandler ? globalConfig.errorHandler(this.id, error, value) : globalConfig.genericError) ||
       globalConfig.genericError;
     if (this._error$) {
       this._error$.next(errorMsg);
