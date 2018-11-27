@@ -4,7 +4,7 @@ RxCache is a light weight RxJs Behavior Subject based cache designed as a replac
 
 [Testbed on StackBlitz](https://stackblitz.com/edit/angular-3yqpfe)
 
-[An example user management with RxCache](https://stackblitz.com/edit/angular-jxqaiv)
+[A simple user management example with RxCache](https://stackblitz.com/edit/angular-jxqaiv)
 
 [A redo of the official ngrx example app can be seen here on StackBlitz](https://stackblitz.com/edit/github-tsrf1f)
 
