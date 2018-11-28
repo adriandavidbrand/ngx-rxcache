@@ -4,7 +4,9 @@ import { RxCacheItem } from './models/rxcache-item';
 import { RxCacheItemConfig } from './models/rxcache-item-config';
 import { globalConfig } from './models/rxcache-global-config';
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class RxCacheService {
   private cacheItems: RxCacheItem<any>[] = [];
 
