@@ -4,6 +4,8 @@ RxCache is a light weight RxJs Behavior Subject based cache designed as a replac
 
 [Testbed on StackBlitz](https://stackblitz.com/edit/angular-3yqpfe)
 
+[A simple user management example with RxCache](https://stackblitz.com/edit/angular-jxqaiv)
+
 [A redo of the official ngrx example app can be seen here on StackBlitz](https://stackblitz.com/edit/github-tsrf1f)
 
 ## Usage
@@ -19,9 +21,9 @@ import { RxCacheService, RxCacheItem } from 'ngx-rxcache';
 @Injectable()
 export class YourService {
   constructor(public cache: RxCacheService) {
-    this.item = cache.config({ id: 'key', construct: functionThatReturnsObservableOfYourType });
+    this.item = cache.get<YourType>({ id: 'key', construct: functionThatReturnsObservableOfYourType });
     // or
-    this.item = cache.config({ id: 'key', initialValue : instanceOfYourType });
+    this.item = cache.get<YourType>({ id: 'key', initialValue : instanceOfYourType });
   }
 
   item: RxCacheItem<any>;
