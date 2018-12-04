@@ -356,7 +356,7 @@ export class RxCacheItem<T> {
     if (this.functions.delete) {
       const next = this.next;
       next(observables.deleting$, true, 'deleting$');
-      next(observables.deleted$, false, 'deleting$');
+      next(observables.deleted$, false, 'deleted$');
       next(observables.hasError$, false);
       next(observables.error$, undefined);
       const finalise = new Subject<boolean>();
