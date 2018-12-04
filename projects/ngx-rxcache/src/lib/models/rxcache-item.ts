@@ -46,9 +46,9 @@ export class RxCacheItem<T> {
   private functions: {
     construct: () => Observable<T>;
     save: (value: T) => Observable<any>;
-    saved: (response: any, val?: T) => void;
+    saved: (response: any, value?: T) => void;
     delete: (value: T) => Observable<any>;
-    deleted: (response: any, val?: T) => void;
+    deleted: (response: any, value?: T) => void;
     errorHandler: (error: any, value?: T) => string | void;
     stringify: (value: T) => any;
     parse: (value: any) => T;
