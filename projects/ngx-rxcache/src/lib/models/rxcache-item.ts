@@ -279,10 +279,12 @@ export class RxCacheItem<T> {
   update(value: T) {
     this.unsubscribe();
     this.nextValue(value);
-    this.next(this.observables.hasError$, false);
-    this.next(this.observables.error$, undefined);
-    this.next(this.observables.loaded$, typeof value !== 'undefined');
-    this.next(this.observables.loading$, false);
+    const observables = this.observables;
+    const next = this.next;
+    next(observables.hasError$, false);
+    next(observables.error$, undefined);
+    next(observables.loaded$, typeof value !== 'undefined');
+    next(observables.loading$, false);
   }
 
   save();
