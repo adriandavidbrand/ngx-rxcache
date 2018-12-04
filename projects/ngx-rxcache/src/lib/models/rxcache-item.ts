@@ -408,17 +408,6 @@ export class RxCacheItem<T> {
     }
   }
 
-  reset(value?: T) {
-    const observables = this.observables;
-    const next = this.next;
-    next(observables.loaded$, false);
-    next(observables.loading$, false);
-    next(observables.hasError$, false);
-    next(observables.error$, undefined);
-    this.nextValue(value);
-    this.unsubscribe();
-  }
-
   unsubscribe() {
     if (this.subscription) {
       this.subscription.unsubscribe();
@@ -426,7 +415,19 @@ export class RxCacheItem<T> {
     }
   }
 
+  reset(value?: T) {
+    this.unsubscribe();
+    const observables = this.observables;
+    const next = this.next;
+    next(observables.loaded$, false);
+    next(observables.loading$, false);
+    next(observables.hasError$, false);
+    next(observables.error$, undefined);
+    this.nextValue(value);
+  }
+
   finish() {
+    this.unsubscribe();
     const observables = this.observables;
     observables.instance$.complete();
     const complete = this.complete;
@@ -438,7 +439,6 @@ export class RxCacheItem<T> {
     complete(observables.deleted$);
     complete(observables.error$);
     complete(observables.hasError$);
-    this.unsubscribe();
   }
 
   private complete(bs: BehaviorSubject<any>) {
