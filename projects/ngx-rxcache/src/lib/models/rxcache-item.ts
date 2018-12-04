@@ -145,7 +145,7 @@ export class RxCacheItem<T> {
   ): BehaviorSubject<BehaviorSubjectType> {
     const behaviorSubject = this.observables[property];
     if (!behaviorSubject) {
-      this.observables[property] = new BehaviorSubject<BehaviorSubjectType>(initialValue);
+      return this.observables[property] = new BehaviorSubject<BehaviorSubjectType>(initialValue);
     }
     return behaviorSubject;
   }
@@ -280,11 +280,10 @@ export class RxCacheItem<T> {
     this.unsubscribe();
     this.nextValue(value);
     const observables = this.observables;
-    const next = this.next;
-    next(observables.hasError$, false);
-    next(observables.error$, undefined);
-    next(observables.loaded$, typeof value !== 'undefined');
-    next(observables.loading$, false);
+    this.next(observables.hasError$, false);
+    this.next(observables.error$, undefined);
+    this.next(observables.loaded$, typeof value !== 'undefined');
+    this.next(observables.loading$, false);
   }
 
   save();
@@ -305,11 +304,10 @@ export class RxCacheItem<T> {
       ? (valueOrSaved as (response: any, value?: any) => void)
       : savedOrUndefined;
     if (this.functions.save) {
-      const next = this.next;
-      next(observables.saving$, true, 'saving$');
-      next(observables.saved$, false, 'saved$');
-      next(observables.hasError$, false);
-      next(observables.error$, undefined);
+      this.next(observables.saving$, true, 'saving$');
+      this.next(observables.saved$, false, 'saved$');
+      this.next(observables.hasError$, false);
+      this.next(observables.error$, undefined);
       const finalise = new Subject<boolean>();
       this.functions
         .save(value)
@@ -354,11 +352,10 @@ export class RxCacheItem<T> {
       ? (valueOrDeleted as (response: any, value?: any) => void)
       : deletedOrUndefined;
     if (this.functions.delete) {
-      const next = this.next;
-      next(observables.deleting$, true, 'deleting$');
-      next(observables.deleted$, false, 'deleted$');
-      next(observables.hasError$, false);
-      next(observables.error$, undefined);
+      this.next(observables.deleting$, true, 'deleting$');
+      this.next(observables.deleted$, false, 'deleted$');
+      this.next(observables.hasError$, false);
+      this.next(observables.error$, undefined);
       const finalise = new Subject<boolean>();
       this.functions
         .delete(value)
@@ -391,11 +388,10 @@ export class RxCacheItem<T> {
     }
     if (this.functions.construct) {
       const observables = this.observables;
-      const next = this.next;
-      next(observables.loading$, true, 'loading$');
-      next(observables.loaded$, false, 'loaded$');
-      next(observables.hasError$, false);
-      next(observables.error$, undefined);
+      this.next(observables.loading$, true, 'loading$');
+      this.next(observables.loaded$, false, 'loaded$');
+      this.next(observables.hasError$, false);
+      this.next(observables.error$, undefined);
       this.unsubscribe();
       this.subscription = this.functions.construct().subscribe(
         item => {
@@ -420,11 +416,10 @@ export class RxCacheItem<T> {
   reset(value?: T) {
     this.unsubscribe();
     const observables = this.observables;
-    const next = this.next;
-    next(observables.loaded$, false);
-    next(observables.loading$, false);
-    next(observables.hasError$, false);
-    next(observables.error$, undefined);
+    this.next(observables.loaded$, false);
+    this.next(observables.loading$, false);
+    this.next(observables.hasError$, false);
+    this.next(observables.error$, undefined);
     this.nextValue(value);
   }
 
@@ -432,15 +427,14 @@ export class RxCacheItem<T> {
     this.unsubscribe();
     const observables = this.observables;
     observables.instance$.complete();
-    const complete = this.complete;
-    complete(observables.loading$);
-    complete(observables.loaded$);
-    complete(observables.saving$);
-    complete(observables.saved$);
-    complete(observables.deleting$);
-    complete(observables.deleted$);
-    complete(observables.error$);
-    complete(observables.hasError$);
+    this.complete(observables.loading$);
+    this.complete(observables.loaded$);
+    this.complete(observables.saving$);
+    this.complete(observables.saved$);
+    this.complete(observables.deleting$);
+    this.complete(observables.deleted$);
+    this.complete(observables.error$);
+    this.complete(observables.hasError$);
   }
 
   private complete(bs: BehaviorSubject<any>) {
@@ -466,12 +460,11 @@ export class RxCacheItem<T> {
     } else {
       observables.hasError$ = new BehaviorSubject<boolean>(true);
     }
-    const next = this.next;
-    next(observables.loaded$, false);
-    next(observables.loading$, false);
-    next(observables.saved$, false);
-    next(observables.saving$, false);
-    next(observables.deleting$, false);
-    next(observables.deleted$, false);
+    this.next(observables.loaded$, false);
+    this.next(observables.loading$, false);
+    this.next(observables.saved$, false);
+    this.next(observables.saving$, false);
+    this.next(observables.deleting$, false);
+    this.next(observables.deleted$, false);
   }
 }
