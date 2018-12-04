@@ -16,18 +16,20 @@ export class RxCacheItem<T> {
     if (sessionStorageItem) {
       this.sessionStorage = true;
     }
-    this.instance$ = new BehaviorSubject<T>(
+    this.observables.instance$ = new BehaviorSubject<T>(
       localStorageItem && localStorageItem !== 'undefined'
         ? config.parse
           ? config.parse(JSON.parse(localStorageItem))
           : JSON.parse(localStorageItem)
         : sessionStorageItem && sessionStorageItem !== 'undefined'
-          ? config.parse
-            ? config.parse(JSON.parse(sessionStorageItem))
-            : JSON.parse(sessionStorageItem)
-          : config.initialValue
+        ? config.parse
+          ? config.parse(JSON.parse(sessionStorageItem))
+          : JSON.parse(sessionStorageItem)
+        : config.initialValue
     );
-    this.instanceExpiredCheck$ = this.instance$.pipe(map(instance => (this.expired ? undefined : instance)));
+    this.observables.instanceExpiredCheck$ = this.observables.instance$.pipe(
+      map(instance => (this.expired ? undefined : instance))
+    );
     this.lastRefreshed = new Date();
     this.configure(config);
   }
@@ -41,46 +43,53 @@ export class RxCacheItem<T> {
   private lastRefreshed: Date;
   private expires?: number;
 
-  private construct?: () => Observable<T>;
-  private _save?: (value: T) => Observable<any>;
-  private _saved?: (response: any, val?: T) => void;
-  private _delete?: (value: T) => Observable<any>;
-  private _deleted?: (response: any, val?: T) => void;
-  private errorHandler?: (error: any, value?: T) => string | void;
+  private functions: {
+    construct: () => Observable<T>;
+    save: (value: T) => Observable<any>;
+    saved: (response: any, val?: T) => void;
+    delete: (value: T) => Observable<any>;
+    deleted: (response: any, val?: T) => void;
+    errorHandler: (error: any, value?: T) => string | void;
+    stringify: (value: T) => any;
+    parse: (value: any) => T;
+  } = {
+    construct: undefined,
+    save: undefined,
+    saved: undefined,
+    delete: undefined,
+    deleted: undefined,
+    errorHandler: undefined,
+    stringify: undefined,
+    parse: undefined
+  };
 
-  private stringify?: (value: T) => any;
-  private parse?: (value: any) => T;
-
-  configure(config: RxCacheItemConfig<T>) {
-    const hasInitialValue = typeof config.initialValue !== 'undefined';
-    const hasValue = typeof this.instance$.getValue() !== 'undefined';
-    if (hasInitialValue && !hasValue) {
-      this.nextValue(config.initialValue);
-      this.next(this._loaded$, true);
-    }
-
-    this.autoload = config.autoload || this.autoload;
-    this.localStorage = config.localStorage || this.localStorage;
-    this.sessionStorage = config.sessionStorage || this.sessionStorage;
-    this.genericError = config.genericError || this.genericError;
-    this.expires = config.expires || this.expires;
-
-    this.construct = config.construct || this.construct;
-    this._save = config.save || this._save;
-    this._saved = config.saved || this._saved;
-    this._delete = config.delete || this._delete;
-    this._deleted = config.deleted || this._deleted;
-    this.errorHandler = config.errorHandler || this.errorHandler;
-    this.stringify = config.stringify || this.stringify;
-    this.parse = config.parse || this.parse;
-
-    if (config.construct) {
-      this.unsubscribe();
-    }
-    if (config.load) {
-      this.load();
-    }
-  }
+  private observables: {
+    instance$: BehaviorSubject<T>;
+    instanceExpiredCheck$: Observable<T>;
+    clone$: Observable<T>;
+    loadedExpiredCheck$: Observable<boolean>;
+    loaded$: BehaviorSubject<boolean>;
+    loading$: BehaviorSubject<boolean>;
+    saving$: BehaviorSubject<boolean>;
+    saved$: BehaviorSubject<boolean>;
+    deleting$: BehaviorSubject<boolean>;
+    deleted$: BehaviorSubject<boolean>;
+    hasError$: BehaviorSubject<boolean>;
+    error$: BehaviorSubject<string>;
+  } = {
+    instance$: undefined,
+    instanceExpiredCheck$: undefined,
+    clone$: undefined,
+    loadedExpiredCheck$: undefined,
+    loaded$: undefined,
+    loading$: undefined,
+    saving$: undefined,
+    saved$: undefined,
+    deleting$: undefined,
+    deleted$: undefined,
+    hasError$: undefined,
+    error$: undefined
+  };
 
   get expired(): boolean {
     return (
@@ -90,23 +99,151 @@ export class RxCacheItem<T> {
     );
   }
 
-  private instance$: BehaviorSubject<T>;
-  private instanceExpiredCheck$: Observable<T>;
   get value$(): Observable<T> {
     this.tryAutoload();
-    return this.instanceExpiredCheck$;
+    return this.observables.instanceExpiredCheck$;
   }
 
   get value(): T {
     this.tryAutoload();
-    return this.expired ? undefined : this.instance$.getValue();
+    return this.expired ? undefined : this.observables.instance$.getValue();
+  }
+
+  get clone$(): Observable<T> {
+    if (!this.observables.clone$) {
+      this.observables.clone$ = this.value$.pipe(map(value => clone(value)));
+    }
+    return this.observables.clone$;
+  }
+
+  get clone(): T {
+    return clone(this.value);
+  }
+
+  get loaded$(): Observable<boolean> {
+    this.createLoaded();
+    return this.observables.loadedExpiredCheck$;
+  }
+
+  get loaded(): boolean {
+    this.createLoaded();
+    return this.observables.loaded$.getValue() && !this.expired;
+  }
+
+  private createLoaded() {
+    if (!this.observables.loaded$) {
+      this.observables.loaded$ = new BehaviorSubject<boolean>(
+        typeof this.observables.instance$.getValue() !== 'undefined'
+      );
+      this.observables.loadedExpiredCheck$ = this.observables.loaded$.pipe(map(loaded => loaded && !this.expired));
+    }
+  }
+
+  private createBehaviorSubject<BehaviorSubjectType>(
+    property: string,
+    initialValue?: BehaviorSubjectType
+  ): BehaviorSubject<BehaviorSubjectType> {
+    const behaviorSubject = this.observables[property];
+    if (!behaviorSubject) {
+      this.observables[property] = new BehaviorSubject<BehaviorSubjectType>(initialValue);
+    }
+    return behaviorSubject;
+  }
+
+  get loading$(): Observable<boolean> {
+    return this.createBehaviorSubject<boolean>('loading$', false);
+  }
+
+  get loading(): boolean {
+    return this.createBehaviorSubject<boolean>('loading$', false).getValue();
+  }
+
+  get saving$(): Observable<boolean> {
+    return this.createBehaviorSubject<boolean>('saving$', false);
+  }
+
+  get saving(): boolean {
+    return this.createBehaviorSubject<boolean>('saving$', false).getValue();
+  }
+
+  get saved$(): Observable<boolean> {
+    return this.createBehaviorSubject<boolean>('saved$', false);
+  }
+
+  get saved(): boolean {
+    return this.createBehaviorSubject<boolean>('saved$', false).getValue();
+  }
+
+  get deleting$(): Observable<boolean> {
+    return this.createBehaviorSubject<boolean>('deleting$', false);
+  }
+
+  get deleting(): boolean {
+    return this.createBehaviorSubject<boolean>('deleting$', false).getValue();
+  }
+
+  get deleted$(): Observable<boolean> {
+    return this.createBehaviorSubject<boolean>('deleted$', false);
+  }
+
+  get deleted(): boolean {
+    return this.createBehaviorSubject<boolean>('deleted$', false).getValue();
+  }
+
+  get hasError$(): Observable<boolean> {
+    return this.createBehaviorSubject<boolean>('hasError$', false);
+  }
+
+  get hasError(): boolean {
+    return this.createBehaviorSubject<boolean>('hasError$', false).getValue();
+  }
+
+  get error$(): Observable<string> {
+    return this.createBehaviorSubject<string>('error$');
+  }
+
+  get error(): string {
+    return this.createBehaviorSubject<string>('error$').getValue();
+  }
+
+  configure(config: RxCacheItemConfig<T>) {
+    const hasInitialValue = typeof config.initialValue !== 'undefined';
+    const hasValue = typeof this.observables.instance$.getValue() !== 'undefined';
+    if (hasInitialValue && !hasValue) {
+      this.nextValue(config.initialValue);
+      this.next(this.observables.loaded$, true);
+    }
+
+    this.autoload = config.autoload || this.autoload;
+    this.localStorage = config.localStorage || this.localStorage;
+    this.sessionStorage = config.sessionStorage || this.sessionStorage;
+    this.genericError = config.genericError || this.genericError;
+    this.expires = config.expires || this.expires;
+
+    const functions = this.functions;
+
+    functions.construct = config.construct || functions.construct;
+    functions.save = config.save || functions.save;
+    functions.saved = config.saved || functions.saved;
+    functions.delete = config.delete || functions.delete;
+    functions.deleted = config.deleted || functions.deleted;
+    functions.errorHandler = config.errorHandler || functions.errorHandler;
+    functions.stringify = config.stringify || functions.stringify;
+    functions.parse = config.parse || functions.parse;
+
+    if (config.construct) {
+      this.unsubscribe();
+    }
+    if (config.load) {
+      this.load();
+    }
   }
 
   private tryAutoload() {
     if (
       this.autoload &&
-      this.construct &&
-      typeof this.instance$.getValue() === 'undefined' &&
+      this.functions.construct &&
+      typeof this.observables.instance$.getValue() === 'undefined' &&
       !this.loaded &&
       !this.loading
     ) {
@@ -114,180 +251,38 @@ export class RxCacheItem<T> {
     }
   }
 
-  private _clone$: Observable<T>;
-  get clone$(): Observable<T> {
-    if (!this._clone$) {
-      this._clone$ = this.value$.pipe(map(value => clone(value)));
-    }
-    return this._clone$;
-  }
-
-  get clone(): T {
-    return clone(this.value);
-  }
-
-  private _loaded$: BehaviorSubject<boolean>;
-  private _loadedExpiredCheck$: Observable<boolean>;
-  get loaded$(): Observable<boolean> {
-    this.createLoaded();
-    return this._loadedExpiredCheck$;
-  }
-
-  get loaded(): boolean {
-    this.createLoaded();
-    return this.expired ? false : this._loaded$.getValue();
-  }
-
-  private createLoaded() {
-    if (!this._loaded$) {
-      this._loaded$ = new BehaviorSubject<boolean>(typeof this.instance$.getValue() !== 'undefined');
-      this._loadedExpiredCheck$ = this._loaded$.pipe(map(loaded => (this.expired ? false : loaded)));
-    }
-  }
-
-  private _loading$: BehaviorSubject<boolean>;
-  get loading$(): Observable<boolean> {
-    this.createLoading();
-    return this._loading$;
-  }
-
-  get loading(): boolean {
-    this.createLoading();
-    return this._loading$.getValue();
-  }
-
-  private createLoading() {
-    if (!this._loading$) {
-      this._loading$ = new BehaviorSubject<boolean>(false);
-    }
-  }
-
-  private _saving$: BehaviorSubject<boolean>;
-  get saving$(): Observable<boolean> {
-    this.createSaving();
-    return this._saving$;
-  }
-
-  get saving(): boolean {
-    this.createSaving();
-    return this._saving$.getValue();
-  }
-
-  private createSaving() {
-    if (!this._saving$) {
-      this._saving$ = new BehaviorSubject<boolean>(false);
-    }
-  }
-
-  private _saved$: BehaviorSubject<boolean>;
-  get saved$(): Observable<boolean> {
-    this.createSaved();
-    return this._saved$;
-  }
-
-  get saved(): boolean {
-    this.createSaved();
-    return this._saved$.getValue();
-  }
-
-  private createSaved() {
-    if (!this._saved$) {
-      this._saved$ = new BehaviorSubject<boolean>(false);
-    }
-  }
-
-  private _deleting$: BehaviorSubject<boolean>;
-  get deleting$(): Observable<boolean> {
-    this.createDeleting();
-    return this._deleting$;
-  }
-
-  get deleting(): boolean {
-    this.createDeleting();
-    return this._deleting$.getValue();
-  }
-
-  private createDeleting() {
-    if (!this._deleting$) {
-      this._deleting$ = new BehaviorSubject<boolean>(false);
-    }
-  }
-
-  private _deleted$: BehaviorSubject<boolean>;
-  get deleted$(): Observable<boolean> {
-    this.createDeleted();
-    return this._deleted$;
-  }
-
-  get deleted(): boolean {
-    this.createDeleted();
-    return this._deleted$.getValue();
-  }
-
-  private createDeleted() {
-    if (!this._deleted$) {
-      this._deleted$ = new BehaviorSubject<boolean>(false);
-    }
-  }
-
-  private _hasError$: BehaviorSubject<boolean>;
-  get hasError$(): Observable<boolean> {
-    this.createHasError();
-    return this._hasError$;
-  }
-
-  get hasError(): boolean {
-    this.createHasError();
-    return this._hasError$.getValue();
-  }
-
-  private createHasError() {
-    if (!this._hasError$) {
-      this._hasError$ = new BehaviorSubject<boolean>(false);
-    }
-  }
-
-  private _error$: BehaviorSubject<string>;
-  get error$(): Observable<string> {
-    this.createError();
-    return this._error$;
-  }
-
-  get error(): string {
-    this.createError();
-    return this._error$.getValue();
-  }
-
-  private createError() {
-    if (!this._error$) {
-      this._error$ = new BehaviorSubject<string>(undefined);
-    }
-  }
-
-  private next<T>(bs: BehaviorSubject<T>, value: T) {
+  private next<ValueType>(bs: BehaviorSubject<ValueType>, value: ValueType, property?: string) {
     if (bs) {
       bs.next(value);
+    } else if (property) {
+      this.observables[property] = new BehaviorSubject<ValueType>(value);
     }
   }
 
   private nextValue(value: T) {
     if (this.localStorage) {
-      localStorage.setItem(this.id, this.stringify ? JSON.stringify(this.stringify(value)) : JSON.stringify(value));
+      localStorage.setItem(
+        this.id,
+        this.functions.stringify ? JSON.stringify(this.functions.stringify(value)) : JSON.stringify(value)
+      );
     }
     if (this.sessionStorage) {
-      sessionStorage.setItem(this.id, this.stringify ? JSON.stringify(this.stringify(value)) : JSON.stringify(value));
+      sessionStorage.setItem(
+        this.id,
+        this.functions.stringify ? JSON.stringify(this.functions.stringify(value)) : JSON.stringify(value)
+      );
     }
-    this.instance$.next(value);
+    this.observables.instance$.next(value);
     this.lastRefreshed = new Date();
   }
 
   update(value: T) {
     this.unsubscribe();
     this.nextValue(value);
-    this.next(this._hasError$, false);
-    this.next(this._error$, undefined);
-    this.next(this._loaded$, typeof value !== 'undefined');
-    this.next(this._loading$, false);
+    this.next(this.observables.hasError$, false);
+    this.next(this.observables.error$, undefined);
+    this.next(this.observables.loaded$, typeof value !== 'undefined');
+    this.next(this.observables.loading$, false);
   }
 
   save();
@@ -298,38 +293,35 @@ export class RxCacheItem<T> {
     valueOrSaved?: T | ((response: any, value?: any) => void),
     savedOrUndefined?: (response: any, value?: any) => void
   ) {
+    const observables = this.observables;
     const valueOrSavedIsFunction = typeof valueOrSaved === 'function';
     const value: T =
-      valueOrSavedIsFunction || typeof valueOrSaved === 'undefined' ? this.instance$.getValue() : (valueOrSaved as T);
+      valueOrSavedIsFunction || typeof valueOrSaved === 'undefined'
+        ? observables.instance$.getValue()
+        : (valueOrSaved as T);
     const saved: (response: any, value?: any) => void = valueOrSavedIsFunction
       ? (valueOrSaved as (response: any, value?: any) => void)
       : savedOrUndefined;
-    if (this._save) {
-      if (this._saving$) {
-        this._saving$.next(true);
-      } else {
-        this._saving$ = new BehaviorSubject<boolean>(true);
-      }
-      if (this._saved$) {
-        this._saved$.next(false);
-      } else {
-        this._saved$ = new BehaviorSubject<boolean>(false);
-      }
-      this.next(this._hasError$, false);
-      this.next(this._error$, undefined);
+    if (this.functions.save) {
+      const next = this.next;
+      next(observables.saving$, true, 'saving$');
+      next(observables.saved$, false, 'saved$');
+      next(observables.hasError$, false);
+      next(observables.error$, undefined);
       const finalise = new Subject<boolean>();
-      this._save(value)
+      this.functions
+        .save(value)
         .pipe(takeUntil(finalise))
         .subscribe(
           response => {
             if (saved) {
               saved(response, value);
             }
-            if (this._saved) {
-              this._saved(response, value);
+            if (this.functions.saved) {
+              this.functions.saved(response, value);
             }
-            this._saved$.next(true);
-            this._saving$.next(false);
+            observables.saved$.next(true);
+            observables.saving$.next(false);
             finalise.next(true);
             finalise.complete();
           },
@@ -350,40 +342,35 @@ export class RxCacheItem<T> {
     valueOrDeleted?: T | ((response: any, value?: any) => void),
     deletedOrUndefined?: (response: any, value?: any) => void
   ) {
+    const observables = this.observables;
     const valueOrDeletedIsFunction = typeof valueOrDeleted === 'function';
     const value: T =
       valueOrDeletedIsFunction || typeof valueOrDeleted === 'undefined'
-        ? this.instance$.getValue()
+        ? observables.instance$.getValue()
         : (valueOrDeleted as T);
     const deleted: (response: any, value?: any) => void = valueOrDeletedIsFunction
       ? (valueOrDeleted as (response: any, value?: any) => void)
       : deletedOrUndefined;
-    if (this._delete) {
-      if (this._deleting$) {
-        this._deleting$.next(true);
-      } else {
-        this._deleting$ = new BehaviorSubject<boolean>(true);
-      }
-      if (this._deleted$) {
-        this._deleted$.next(false);
-      } else {
-        this._deleted$ = new BehaviorSubject<boolean>(false);
-      }
-      this.next(this._hasError$, false);
-      this.next(this._error$, undefined);
+    if (this.functions.delete) {
+      const next = this.next;
+      next(observables.deleting$, true, 'deleting$');
+      next(observables.deleted$, false, 'deleting$');
+      next(observables.hasError$, false);
+      next(observables.error$, undefined);
       const finalise = new Subject<boolean>();
-      this._delete(value)
+      this.functions
+        .delete(value)
         .pipe(takeUntil(finalise))
         .subscribe(
           response => {
             if (deleted) {
               deleted(response, value);
             }
-            if (this._deleted) {
-              this._deleted(response, value);
+            if (this.functions.deleted) {
+              this.functions.deleted(response, value);
             }
-            this._deleted$.next(true);
-            this._deleting$.next(false);
+            observables.deleted$.next(true);
+            observables.deleting$.next(false);
             finalise.next(true);
             finalise.complete();
           },
@@ -398,27 +385,21 @@ export class RxCacheItem<T> {
 
   load(construct?: () => Observable<T>) {
     if (construct) {
-      this.construct = construct;
+      this.functions.construct = construct;
     }
-    if (this.construct) {
-      if (this._loading$) {
-        this._loading$.next(true);
-      } else {
-        this._loading$ = new BehaviorSubject<boolean>(true);
-      }
-      if (this._loaded$) {
-        this._loaded$.next(false);
-      } else {
-        this._loaded$ = new BehaviorSubject<boolean>(false);
-      }
-      this.next(this._hasError$, false);
-      this.next(this._error$, undefined);
+    if (this.functions.construct) {
+      const observables = this.observables;
+      const next = this.next;
+      next(observables.loading$, true, 'loading$');
+      next(observables.loaded$, false, 'loaded$');
+      next(observables.hasError$, false);
+      next(observables.error$, undefined);
       this.unsubscribe();
-      this.subscription = this.construct().subscribe(
+      this.subscription = this.functions.construct().subscribe(
         item => {
           this.nextValue(item);
-          this._loaded$.next(true);
-          this._loading$.next(false);
+          observables.loaded$.next(true);
+          observables.loading$.next(false);
         },
         error => {
           this.runErrorHandler(error);
@@ -428,10 +409,12 @@ export class RxCacheItem<T> {
   }
 
   reset(value?: T) {
-    this.next(this._loaded$, false);
-    this.next(this._loading$, false);
-    this.next(this._hasError$, false);
-    this.next(this._error$, undefined);
+    const observables = this.observables;
+    const next = this.next;
+    next(observables.loaded$, false);
+    next(observables.loading$, false);
+    next(observables.hasError$, false);
+    next(observables.error$, undefined);
     this.nextValue(value);
     this.unsubscribe();
   }
@@ -444,15 +427,17 @@ export class RxCacheItem<T> {
   }
 
   finish() {
-    this.instance$.complete();
-    this.complete(this._loading$);
-    this.complete(this._loaded$);
-    this.complete(this._saving$);
-    this.complete(this._saved$);
-    this.complete(this._deleting$);
-    this.complete(this._deleted$);
-    this.complete(this._error$);
-    this.complete(this._hasError$);
+    const observables = this.observables;
+    observables.instance$.complete();
+    const complete = this.complete;
+    complete(observables.loading$);
+    complete(observables.loaded$);
+    complete(observables.saving$);
+    complete(observables.saved$);
+    complete(observables.deleting$);
+    complete(observables.deleted$);
+    complete(observables.error$);
+    complete(observables.hasError$);
     this.unsubscribe();
   }
 
@@ -463,26 +448,28 @@ export class RxCacheItem<T> {
   }
 
   private runErrorHandler(error: any, value?: T) {
+    const observables = this.observables;
     const errorMsg =
-      (this.errorHandler ? this.errorHandler(error, value) : this.genericError) ||
+      (this.functions.errorHandler ? this.functions.errorHandler(error, value) : this.genericError) ||
       this.genericError ||
       (globalConfig.errorHandler ? globalConfig.errorHandler(this.id, error, value) : globalConfig.genericError) ||
       globalConfig.genericError;
-    if (this._error$) {
-      this._error$.next(errorMsg);
+    if (observables.error$) {
+      observables.error$.next(errorMsg);
     } else {
-      this._error$ = new BehaviorSubject<string>(errorMsg);
+      observables.error$ = new BehaviorSubject<string>(errorMsg);
     }
-    if (this._hasError$) {
-      this._hasError$.next(true);
+    if (observables.hasError$) {
+      observables.hasError$.next(true);
     } else {
-      this._hasError$ = new BehaviorSubject<boolean>(true);
+      observables.hasError$ = new BehaviorSubject<boolean>(true);
     }
-    this.next(this._loaded$, false);
-    this.next(this._loading$, false);
-    this.next(this._saved$, false);
-    this.next(this._saving$, false);
-    this.next(this._deleting$, false);
-    this.next(this._deleted$, false);
+    const next = this.next;
+    next(observables.loaded$, false);
+    next(observables.loading$, false);
+    next(observables.saved$, false);
+    next(observables.saving$, false);
+    next(observables.deleting$, false);
+    next(observables.deleted$, false);
   }
 }
