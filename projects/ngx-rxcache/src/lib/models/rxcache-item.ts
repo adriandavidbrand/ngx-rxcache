@@ -35,13 +35,13 @@ export class RxCacheItem<T> {
   }
 
   id: string;
-  private subscription?: Subscription;
-  private autoload?: boolean;
-  private localStorage?: boolean;
-  private sessionStorage?: boolean;
+  private subscription: Subscription;
+  private autoload: boolean;
+  private localStorage: boolean;
+  private sessionStorage: boolean;
   private genericError: string;
   private lastRefreshed: Date;
-  private expires?: number;
+  private expires: number;
 
   private functions: {
     construct: () => Observable<T>;
