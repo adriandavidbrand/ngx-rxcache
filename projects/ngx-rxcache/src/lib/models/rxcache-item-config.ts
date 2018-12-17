@@ -9,7 +9,6 @@ export interface RxCacheItemConfig<T> {
   deleted?: (response: any, value?: T) => void;
   stringify?: (value: T) => any;
   parse?: (value: any) => T;
-  expires?: number;
   load?: boolean;
   autoload?: boolean;
   localStorage?: boolean;

@@ -27,10 +27,6 @@ export class RxCacheItem<T> {
           : JSON.parse(sessionStorageItem)
         : config.initialValue
     );
-    this.observables.instanceExpiredCheck$ = this.observables.instance$.pipe(
-      map(instance => (this.expired ? undefined : instance))
-    );
-    this.lastRefreshed = new Date();
     this.configure(config);
   }
 
@@ -40,8 +36,6 @@ export class RxCacheItem<T> {
   private localStorage: boolean;
   private sessionStorage: boolean;
   private genericError: string;
-  private lastRefreshed: Date;
-  private expires: number;
 
   private functions: {
     construct: () => Observable<T>;
@@ -65,9 +59,7 @@ export class RxCacheItem<T> {
 
   private observables: {
     instance$: BehaviorSubject<T>;
-    instanceExpiredCheck$: Observable<T>;
     clone$: Observable<T>;
-    loadedExpiredCheck$: Observable<boolean>;
     loaded$: BehaviorSubject<boolean>;
     loading$: BehaviorSubject<boolean>;
     saving$: BehaviorSubject<boolean>;
@@ -78,9 +70,7 @@ export class RxCacheItem<T> {
     error$: BehaviorSubject<string>;
   } = {
     instance$: undefined,
-    instanceExpiredCheck$: undefined,
     clone$: undefined,
-    loadedExpiredCheck$: undefined,
     loaded$: undefined,
     loading$: undefined,
     saving$: undefined,
@@ -91,22 +81,14 @@ export class RxCacheItem<T> {
     error$: undefined
   };
 
-  get expired(): boolean {
-    return (
-      this.expires &&
-      this.lastRefreshed &&
-      this.lastRefreshed.getTime() < new Date().getTime() - this.expires * 60 * 1000
-    );
-  }
-
   get value$(): Observable<T> {
     this.tryAutoload();
-    return this.observables.instanceExpiredCheck$;
+    return this.observables.instance$;
   }
 
   get value(): T {
     this.tryAutoload();
-    return this.expired ? undefined : this.observables.instance$.getValue();
+    return this.observables.instance$.getValue();
   }
 
   get clone$(): Observable<T> {
@@ -120,25 +102,6 @@ export class RxCacheItem<T> {
     return clone(this.value);
   }
 
-  get loaded$(): Observable<boolean> {
-    this.createLoaded();
-    return this.observables.loadedExpiredCheck$;
-  }
-
-  get loaded(): boolean {
-    this.createLoaded();
-    return this.observables.loaded$.getValue() && !this.expired;
-  }
-
-  private createLoaded() {
-    if (!this.observables.loaded$) {
-      this.observables.loaded$ = new BehaviorSubject<boolean>(
-        typeof this.observables.instance$.getValue() !== 'undefined'
-      );
-      this.observables.loadedExpiredCheck$ = this.observables.loaded$.pipe(map(loaded => loaded && !this.expired));
-    }
-  }
-
   private createBehaviorSubject<BehaviorSubjectType>(
     property: string,
     initialValue?: BehaviorSubjectType
@@ -148,6 +111,14 @@ export class RxCacheItem<T> {
       return this.observables[property] = new BehaviorSubject<BehaviorSubjectType>(initialValue);
     }
     return behaviorSubject;
+  }
+
+  get loaded$(): Observable<boolean> {
+    return this.createBehaviorSubject<boolean>('loaded$', false);
+  }
+
+  get loaded(): boolean {
+    return this.createBehaviorSubject<boolean>('loaded$', false).getValue();
   }
 
   get loading$(): Observable<boolean> {
@@ -218,7 +189,6 @@ export class RxCacheItem<T> {
     this.localStorage = config.localStorage || this.localStorage;
     this.sessionStorage = config.sessionStorage || this.sessionStorage;
     this.genericError = config.genericError || this.genericError;
-    this.expires = config.expires || this.expires;
 
     const functions = this.functions;
 
@@ -273,7 +243,6 @@ export class RxCacheItem<T> {
       );
     }
     this.observables.instance$.next(value);
-    this.lastRefreshed = new Date();
   }
 
   update(value: T) {

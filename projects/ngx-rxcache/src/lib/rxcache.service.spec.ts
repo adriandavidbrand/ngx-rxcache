@@ -33,26 +33,6 @@ describe('RxCacheService', () => {
     expect(cacheItem.value).toEqual(10);
   }));
 
-  it('should not be expired', inject([RxCacheService], (service: RxCacheService) => {
-    const cacheItem = service.get({
-      id: 'test',
-      initialValue: 10,
-      expires: 5 / 60000 //5ms in minutes
-    });
-    expect(cacheItem.value).toEqual(10);
-  }));
-
-  it('should be expired after 5ms', inject([RxCacheService], fakeAsync((service: RxCacheService) => {
-    const cacheItem = service.get({
-      id: 'expiry',
-      initialValue: 10,
-      expires: 5 / 60000 //5ms in minutes
-    });
-    tick(6);
-    expect(cacheItem.value).toBeUndefined();
-    discardPeriodicTasks();
-  })));
-
   it('clone$ should copy property', inject([RxCacheService], (service: RxCacheService) => {
     const obj = { prop1: 'prop1' };
     const cacheItem = service.get({

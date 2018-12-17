@@ -1,6 +1,6 @@
 # RxCache
 
-RxCache is a light weight RxJs Behavior Subject based cache designed as a replacement to Redux style stores. It offers much simpler to grasp ways of achieving push based data flow to your components with hardly any boiler plate code at all.
+RxCache is a light weight RxJs Behavior Subject based cache. It offers simple to grasp ways of achieving push based data flow to your components with hardly any boiler plate code at all.
 
 [Testbed on StackBlitz](https://stackblitz.com/edit/angular-3yqpfe)
 
