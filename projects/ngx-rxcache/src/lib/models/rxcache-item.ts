@@ -277,7 +277,7 @@ export class RxCacheItem<T> {
       this.next(observables.saved$, false, 'saved$');
       this.next(observables.hasError$, false);
       this.next(observables.error$, undefined);
-      const finalise = new Subject<boolean>();
+      const finalise = new Subject<void>();
       this.functions
         .save(value)
         .pipe(takeUntil(finalise))
@@ -291,12 +291,12 @@ export class RxCacheItem<T> {
             }
             observables.saved$.next(true);
             observables.saving$.next(false);
-            finalise.next(true);
+            finalise.next();
             finalise.complete();
           },
           error => {
             this.runErrorHandler(error, value);
-            finalise.next(true);
+            finalise.next();
             finalise.complete();
           }
         );
@@ -325,7 +325,7 @@ export class RxCacheItem<T> {
       this.next(observables.deleted$, false, 'deleted$');
       this.next(observables.hasError$, false);
       this.next(observables.error$, undefined);
-      const finalise = new Subject<boolean>();
+      const finalise = new Subject<void>();
       this.functions
         .delete(value)
         .pipe(takeUntil(finalise))
@@ -339,12 +339,12 @@ export class RxCacheItem<T> {
             }
             observables.deleted$.next(true);
             observables.deleting$.next(false);
-            finalise.next(true);
+            finalise.next();
             finalise.complete();
           },
           error => {
             this.runErrorHandler(error, value);
-            finalise.next(true);
+            finalise.next();
             finalise.complete();
           }
         );
