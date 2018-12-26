@@ -47,7 +47,7 @@ describe('RxCacheService', () => {
     expect(cacheItem.value.prop1).toEqual(clone.prop1);
   }));
 
-  it('clone should not be the same instance', inject([RxCacheService], (service: RxCacheService) => {
+  it('clone$ should not be the same instance', inject([RxCacheService], (service: RxCacheService) => {
     const obj = { prop1: 'prop1' };
     const cacheItem = service.get({
       id: 'test',
@@ -58,6 +58,16 @@ describe('RxCacheService', () => {
       clone = item;
     });
     subscription.unsubscribe();
+    expect(cacheItem.value === clone).toBeFalsy();
+  }));
+
+  it('clone should not be the same instance', inject([RxCacheService], (service: RxCacheService) => {
+    const obj = { prop1: 'prop1' };
+    const cacheItem = service.get({
+      id: 'test',
+      initialValue: obj
+    });
+    const clone = cacheItem.clone;
     expect(cacheItem.value === clone).toBeFalsy();
   }));
 
