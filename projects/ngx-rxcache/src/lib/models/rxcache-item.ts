@@ -81,7 +81,7 @@ export class RxCacheItem<T> {
     error$: undefined
   };
 
-  get value$(): Observable<T> {
+  get value$(): BehaviorSubject<T> {
     this.tryAutoload();
     return this.observables.instance$;
   }
@@ -113,7 +113,7 @@ export class RxCacheItem<T> {
     return behaviorSubject;
   }
 
-  get loaded$(): Observable<boolean> {
+  get loaded$(): BehaviorSubject<boolean> {
     return this.createBehaviorSubject<boolean>('loaded$', false);
   }
 
@@ -121,7 +121,7 @@ export class RxCacheItem<T> {
     return this.createBehaviorSubject<boolean>('loaded$', false).getValue();
   }
 
-  get loading$(): Observable<boolean> {
+  get loading$(): BehaviorSubject<boolean> {
     return this.createBehaviorSubject<boolean>('loading$', false);
   }
 
@@ -129,7 +129,7 @@ export class RxCacheItem<T> {
     return this.createBehaviorSubject<boolean>('loading$', false).getValue();
   }
 
-  get saving$(): Observable<boolean> {
+  get saving$(): BehaviorSubject<boolean> {
     return this.createBehaviorSubject<boolean>('saving$', false);
   }
 
@@ -137,7 +137,7 @@ export class RxCacheItem<T> {
     return this.createBehaviorSubject<boolean>('saving$', false).getValue();
   }
 
-  get saved$(): Observable<boolean> {
+  get saved$(): BehaviorSubject<boolean> {
     return this.createBehaviorSubject<boolean>('saved$', false);
   }
 
@@ -145,7 +145,7 @@ export class RxCacheItem<T> {
     return this.createBehaviorSubject<boolean>('saved$', false).getValue();
   }
 
-  get deleting$(): Observable<boolean> {
+  get deleting$(): BehaviorSubject<boolean> {
     return this.createBehaviorSubject<boolean>('deleting$', false);
   }
 
@@ -153,7 +153,7 @@ export class RxCacheItem<T> {
     return this.createBehaviorSubject<boolean>('deleting$', false).getValue();
   }
 
-  get deleted$(): Observable<boolean> {
+  get deleted$(): BehaviorSubject<boolean> {
     return this.createBehaviorSubject<boolean>('deleted$', false);
   }
 
@@ -161,7 +161,7 @@ export class RxCacheItem<T> {
     return this.createBehaviorSubject<boolean>('deleted$', false).getValue();
   }
 
-  get hasError$(): Observable<boolean> {
+  get hasError$(): BehaviorSubject<boolean> {
     return this.createBehaviorSubject<boolean>('hasError$', false);
   }
 
@@ -169,7 +169,7 @@ export class RxCacheItem<T> {
     return this.createBehaviorSubject<boolean>('hasError$', false).getValue();
   }
 
-  get error$(): Observable<string> {
+  get error$(): BehaviorSubject<string> {
     return this.createBehaviorSubject<string>('error$');
   }
 
