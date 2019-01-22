@@ -28,7 +28,7 @@ export class RxCacheService {
   }
 
   exists(id: string): boolean {
-    return !!this.cacheItems[id];
+    return id in this.cacheItems;
   }
 
   delete<T>(id: string) {
