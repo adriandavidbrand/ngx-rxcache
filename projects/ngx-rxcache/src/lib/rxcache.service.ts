@@ -36,6 +36,9 @@ export class RxCacheService {
     if (localStorage.getItem(id)) {
       localStorage.removeItem(id);
     }
+    if (sessionStorage.getItem(id)) {
+      sessionStorage.removeItem(id);
+    }
     if (cacheItem) {
       cacheItem.finish();
       delete this.cacheItems[id];
