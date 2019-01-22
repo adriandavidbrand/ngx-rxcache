@@ -8,7 +8,7 @@ import { globalConfig } from './models/rxcache-global-config';
   providedIn: 'root'
 })
 export class RxCacheService {
-  private cacheItems: RxCacheItem<any>[] = [];
+  private cacheItems: { [key: string]: RxCacheItem<any> } = {};
 
   get<T>(id: string): RxCacheItem<T>;
   get<T>(config: RxCacheItemConfig<T>): RxCacheItem<T>;
@@ -17,10 +17,10 @@ export class RxCacheService {
     const config: RxCacheItemConfig<T> = paramIsString
       ? { id: idOrConfig as string }
       : (idOrConfig as RxCacheItemConfig<T>);
-    let cacheItem = this.cacheItems.find(i => i.id === config.id);
+    let cacheItem = this.cacheItems[config.id];
     if (!cacheItem) {
       cacheItem = new RxCacheItem<T>(config);
-      this.cacheItems = [...this.cacheItems, cacheItem];
+      this.cacheItems[config.id] = cacheItem;
     } else if (!paramIsString) {
       cacheItem.configure(config);
     }
@@ -28,25 +28,25 @@ export class RxCacheService {
   }
 
   exists(id: string): boolean {
-    return !!this.cacheItems.find(i => i.id === id);
+    return !!this.cacheItems[id];
   }
 
   delete<T>(id: string) {
-    let cacheItem = this.cacheItems.find(i => i.id === id);
+    let cacheItem = this.cacheItems[id];
     if (localStorage.getItem(id)) {
       localStorage.removeItem(id);
     }
     if (cacheItem) {
       cacheItem.finish();
-      this.cacheItems = this.cacheItems.filter(item => item.id !== id);
+      delete this.cacheItems[id];
     }
   }
 
   clear() {
-    this.cacheItems = this.cacheItems.reduce((items, item) => {
-      item.finish();
-      return items;
-    }, []);
+    for (let id in this.cacheItems) {
+      this.cacheItems[id].finish();
+    }
+    this.cacheItems = {};
   }
 
   genericError(genericError: string) {
