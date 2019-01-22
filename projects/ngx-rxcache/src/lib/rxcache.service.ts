@@ -8,7 +8,7 @@ import { globalConfig } from './models/rxcache-global-config';
   providedIn: 'root'
 })
 export class RxCacheService {
-  private cacheItems: { [key: string]: RxCacheItem<any> } = {};
+  private cacheItems: { [id: string]: RxCacheItem<any> } = {};
 
   get<T>(id: string): RxCacheItem<T>;
   get<T>(config: RxCacheItemConfig<T>): RxCacheItem<T>;
