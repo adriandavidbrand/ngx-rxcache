@@ -1,0 +1,29 @@
+<h1>RxCache Demo</h1>
+
+<button (click)="update()">Update with new values</button><br>
+<button (click)="refresh()">Load with current constructor</button><br>
+<button (click)="reload()">Load with new constructor</button><br>
+<button (click)="error()">Cause an error with a new constructor</button><br>
+<button (click)="save()">Save</button><br>
+<button (click)="clear()">Clear message</button><br>
+<input name="text" [(ngModel)]="text"> <button (click)="add()">Add</button>
+
+<div *ngIf="loading$ | async; else loaded">
+    loading ...
+</div>
+
+<ng-template #loaded>
+    <div *ngFor="let item of items$ | async">{{item}}</div>
+</ng-template>
+
+<p *ngIf="error$ | async as error">
+  {{ error }}
+</p>
+
+<div *ngIf="saving$ | async">
+    saving ...
+</div>
+
+<p *ngIf="message$ | async as message">
+  {{message}}
+</p>

@@ -1,0 +1,18 @@
+p {
+    font-family: Lato;
+  }
+  
+  button {
+    background-color: #ddd;
+    margin-bottom: 3px;
+    padding: 4px 8px;
+    border: 1px black solid;
+    border-radius: 4px;
+  }
+  
+  input {
+    margin-right: 3px;
+    padding: 4px 8px;
+    border: 1px black solid;
+    border-radius: 4px;
+  }
