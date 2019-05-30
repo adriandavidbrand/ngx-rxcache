@@ -4,9 +4,9 @@
   "newProjectRoot": "projects",
   "projects": {
     "ngx-rxcache": {
-      "projectType": "library",
       "root": "projects/ngx-rxcache",
       "sourceRoot": "projects/ngx-rxcache/src",
+      "projectType": "library",
       "prefix": "lib",
       "architect": {
         "build": {
@@ -39,11 +39,11 @@
       }
     },
     "ngx-rxcache-demo": {
-      "projectType": "application",
-      "schematics": {},
-      "root": "projects/ngx-rxcache-demo",
+      "root": "projects/ngx-rxcache-demo/",
       "sourceRoot": "projects/ngx-rxcache-demo/src",
+      "projectType": "application",
       "prefix": "app",
+      "schematics": {},
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
@@ -60,7 +60,8 @@
             "styles": [
               "projects/ngx-rxcache-demo/src/styles.css"
             ],
-            "scripts": []
+            "scripts": [],
+            "es5BrowserSupport": true
           },
           "configurations": {
             "production": {
@@ -113,14 +114,14 @@
             "polyfills": "projects/ngx-rxcache-demo/src/polyfills.ts",
             "tsConfig": "projects/ngx-rxcache-demo/tsconfig.spec.json",
             "karmaConfig": "projects/ngx-rxcache-demo/karma.conf.js",
-            "assets": [
-              "projects/ngx-rxcache-demo/src/favicon.ico",
-              "projects/ngx-rxcache-demo/src/assets"
-            ],
             "styles": [
               "projects/ngx-rxcache-demo/src/styles.css"
             ],
-            "scripts": []
+            "scripts": [],
+            "assets": [
+              "projects/ngx-rxcache-demo/src/favicon.ico",
+              "projects/ngx-rxcache-demo/src/assets"
+            ]
           }
         },
         "lint": {
@@ -128,18 +129,24 @@
           "options": {
             "tsConfig": [
               "projects/ngx-rxcache-demo/tsconfig.app.json",
-              "projects/ngx-rxcache-demo/tsconfig.spec.json",
-              "projects/ngx-rxcache-demo/e2e/tsconfig.json"
+              "projects/ngx-rxcache-demo/tsconfig.spec.json"
             ],
             "exclude": [
               "**/node_modules/**"
             ]
           }
-        },
+        }
+      }
+    },
+    "ngx-rxcache-demo-e2e": {
+      "root": "projects/ngx-rxcache-demo-e2e/",
+      "projectType": "application",
+      "prefix": "",
+      "architect": {
         "e2e": {
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
-            "protractorConfig": "projects/ngx-rxcache-demo/e2e/protractor.conf.js",
+            "protractorConfig": "projects/ngx-rxcache-demo-e2e/protractor.conf.js",
             "devServerTarget": "ngx-rxcache-demo:serve"
           },
           "configurations": {
@@ -147,8 +154,18 @@
               "devServerTarget": "ngx-rxcache-demo:serve:production"
             }
           }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": "projects/ngx-rxcache-demo-e2e/tsconfig.e2e.json",
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
         }
       }
-    }},
+    }
+  },
   "defaultProject": "ngx-rxcache"
 }
