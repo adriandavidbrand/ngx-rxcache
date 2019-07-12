@@ -379,7 +379,7 @@ describe('RxCacheService', () => {
       load: true,
       construct: () => throwError('Fail')
     });
-    expect(cacheItem.error).toEqual('An error has occoured');
+    expect(cacheItem.error).toEqual('An error has occurred');
   }));
 
   it('should error with generic custom message', inject([RxCacheService], (service: RxCacheService) => {
