@@ -4,5 +4,5 @@ export interface RxCacheGlobalConfig {
 }
 
 export const globalConfig: RxCacheGlobalConfig = {
-  genericError: 'An error has occoured'
+  genericError: 'An error has occurred'
 };
