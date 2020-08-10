@@ -1,4 +1,6 @@
-# RxCache
+# RxCache - No longer actively supported, please see  the library ez-state
+
+This project is now deprecate, please see ez-state for the currently supported library.
 
 RxCache is a light weight RxJs Behavior Subject based cache. It offers simple to grasp ways of achieving push based data flow to your components with hardly any boiler plate code at all.
 
